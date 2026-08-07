@@ -224,7 +224,16 @@ short-lived cookies rather than server-side state, so a restart mid-login is har
 
 By default an account has to exist before anyone can sign in: an admin invites the
 person by their address, and their first federated sign-in binds their identity to
-that account. If you would rather let a group in on its own:
+that account.
+
+The binding needs the provider to assert the email is verified. Authentik has
+defaulted `email_verified` to `false` since 2025.10, so a first sign-in is refused
+with "that account is not allowed to sign in here" even when the address matches. On
+a single-tenant provider whose admin owns every account, set
+`WFM_OIDC_TRUST_UNVERIFIED_EMAIL=true` (chart: `auth.oidc.trustUnverifiedEmail`) to
+adopt the account anyway. Leave it off wherever people can self-register addresses.
+
+If you would rather let a group in on its own:
 
 ```yaml
 auth:

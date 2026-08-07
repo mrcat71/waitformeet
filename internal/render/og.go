@@ -201,13 +201,13 @@ func drawCaptions(canvas *image.RGBA, opts OGOptions, ink color.RGBA) error {
 	if err != nil {
 		return fmt.Errorf("render: build the title face: %w", err)
 	}
-	defer titleFace.Close()
+	defer func() { _ = titleFace.Close() }()
 
 	captionFace, err := opentype.NewFace(parsed, &opentype.FaceOptions{Size: 36, DPI: 72, Hinting: font.HintingFull})
 	if err != nil {
 		return fmt.Errorf("render: build the caption face: %w", err)
 	}
-	defer captionFace.Close()
+	defer func() { _ = captionFace.Close() }()
 
 	if opts.Title != "" {
 		drawCentred(canvas, titleFace, opts.Title, 110, ink)

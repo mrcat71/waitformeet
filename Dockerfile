@@ -2,7 +2,7 @@
 
 # Assets and binary are built in one Go stage: esbuild is a Go library, so bundling
 # the TypeScript needs no Node.js and no npm anywhere in this image.
-FROM golang:1.26-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS build
 
 WORKDIR /src
 

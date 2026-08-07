@@ -214,8 +214,8 @@ func TestLoadOIDC(t *testing.T) {
 		t.Fatalf("Load() error = %v, want nil", err)
 	}
 
-	if got, want := cfg.OIDC.Issuer, "https://auth.example.com/application/o/waitformeet"; got != want {
-		t.Errorf("Issuer = %q, want %q (trailing slash trimmed)", got, want)
+	if got, want := cfg.OIDC.Issuer, "https://auth.example.com/application/o/waitformeet/"; got != want {
+		t.Errorf("Issuer = %q, want %q (preserved exactly for OIDC discovery)", got, want)
 	}
 	if got, want := cfg.OIDC.AllowedDomains[0], "example.com"; got != want {
 		t.Errorf("AllowedDomains[0] = %q, want %q (lowercased)", got, want)

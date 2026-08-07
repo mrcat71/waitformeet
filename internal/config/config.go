@@ -83,6 +83,12 @@ type OIDCConfig struct {
 	// GroupsClaim names the ID token claim holding group membership. Authentik
 	// emits "groups".
 	GroupsClaim string
+	// TrustUnverifiedEmail adopts a pre-provisioned account by its email even when
+	// the provider does not assert the address is verified. Authentik defaults
+	// email_verified to false since 2025.10, so a single-tenant deployment whose
+	// admin controls every account can enable this. Off by default: leave it off for
+	// any provider where a person could register an address they do not own.
+	TrustUnverifiedEmail bool
 	// AutoProvision creates a user record on first login for anyone satisfying
 	// AllowedGroups or AllowedDomains. Off by default: normally an admin
 	// pre-authorizes the person in the UI.
@@ -128,17 +134,22 @@ func Load(getenv Getenv) (*Config, error) {
 	cfg.SeedMode = r.seedMode("SEED_MODE", SeedOnce)
 	cfg.SessionSecret, cfg.SessionSecretGenerated = r.sessionSecret("SESSION_SECRET")
 
+	// The OIDC issuer is passed through exactly, with only surrounding whitespace
+	// removed. It is an identifier compared byte-for-byte during discovery and
+	// ID-token validation, not a URL to normalise; Authentik keeps a trailing slash,
+	// so trimming it here would break the discovery match.
 	cfg.OIDC = OIDCConfig{
-		Enabled:        r.boolean("OIDC_ENABLED", false),
-		Issuer:         strings.TrimSuffix(strings.TrimSpace(r.str("OIDC_ISSUER", "")), "/"),
-		ClientID:       strings.TrimSpace(r.str("OIDC_CLIENT_ID", "")),
-		ClientSecret:   r.str("OIDC_CLIENT_SECRET", ""),
-		DisplayName:    r.str("OIDC_DISPLAY_NAME", "SSO"),
-		Scopes:         r.list("OIDC_SCOPES", []string{"openid", "profile", "email"}),
-		GroupsClaim:    r.str("OIDC_GROUPS_CLAIM", "groups"),
-		AutoProvision:  r.boolean("OIDC_AUTO_PROVISION", false),
-		AllowedGroups:  r.list("OIDC_ALLOWED_GROUPS", nil),
-		AllowedDomains: lowerAll(r.list("OIDC_ALLOWED_DOMAINS", nil)),
+		Enabled:              r.boolean("OIDC_ENABLED", false),
+		Issuer:               strings.TrimSpace(r.str("OIDC_ISSUER", "")),
+		ClientID:             strings.TrimSpace(r.str("OIDC_CLIENT_ID", "")),
+		ClientSecret:         r.str("OIDC_CLIENT_SECRET", ""),
+		DisplayName:          r.str("OIDC_DISPLAY_NAME", "SSO"),
+		Scopes:               r.list("OIDC_SCOPES", []string{"openid", "profile", "email"}),
+		GroupsClaim:          r.str("OIDC_GROUPS_CLAIM", "groups"),
+		TrustUnverifiedEmail: r.boolean("OIDC_TRUST_UNVERIFIED_EMAIL", false),
+		AutoProvision:        r.boolean("OIDC_AUTO_PROVISION", false),
+		AllowedGroups:        r.list("OIDC_ALLOWED_GROUPS", nil),
+		AllowedDomains:       lowerAll(r.list("OIDC_ALLOWED_DOMAINS", nil)),
 	}
 
 	r.errs = append(r.errs, cfg.validate()...)

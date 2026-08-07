@@ -171,16 +171,16 @@ func writeJPEG(path string, img image.Image, quality int) error {
 	}
 
 	if err := jpeg.Encode(file, img, &jpeg.Options{Quality: quality}); err != nil {
-		file.Close()
-		os.Remove(tmp)
+		_ = file.Close()
+		_ = os.Remove(tmp)
 		return fmt.Errorf("media: encode %s: %w", path, err)
 	}
 	if err := file.Close(); err != nil {
-		os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return fmt.Errorf("media: close %s: %w", tmp, err)
 	}
 	if err := os.Rename(tmp, path); err != nil {
-		os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return fmt.Errorf("media: install %s: %w", path, err)
 	}
 	return nil

@@ -166,6 +166,11 @@ auth:
       - profile
       - email
     groupsClaim: groups
+    # Adopt a pre-authorised account by its email even when the provider does not
+    # assert the email is verified. Authentik defaults email_verified to false since
+    # 2025.10, so a single-tenant deployment whose admin owns every account can turn
+    # this on. Leave it off for any provider where people self-register addresses.
+    trustUnverifiedEmail: false
     # Off by default. Normally an admin pre-authorises somebody in the UI and their
     # first sign-in binds the identity. Turning this on lets anyone matching the
     # rules below get an editor account on their own.

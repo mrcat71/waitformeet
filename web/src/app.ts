@@ -44,6 +44,19 @@ function registerServiceWorker(): void {
   });
 }
 
+/**
+ * The language <select> switches locale by submitting its GET form, which the
+ * server turns into a persisted ?lang cookie. This is wired here rather than with
+ * an inline onchange attribute, which the Content-Security-Policy (script-src
+ * 'self') blocks. With scripting off, the <noscript> submit button covers it.
+ */
+function initLanguageSwitch(root: ParentNode): void {
+  const select = root.querySelector<HTMLSelectElement>("select#lang");
+  select?.addEventListener("change", () => {
+    select.form?.submit();
+  });
+}
+
 function main(): void {
   const locale = pageLocale();
   const clock = serverClock();
@@ -54,6 +67,7 @@ function main(): void {
   initClocks(document, clock, locale);
   initLightbox(document);
   initCelebration(document);
+  initLanguageSwitch(document);
   registerServiceWorker();
 }
 

@@ -373,6 +373,25 @@ func TestResolveOIDC(t *testing.T) {
 			wantErr: auth.ErrOIDCNotAllowed,
 		},
 		{
+			// A single-tenant provider (Authentik defaults email_verified to false
+			// since 2025.10) where the admin owns every account can opt into trusting
+			// the address, and then a pre-authorised email adopts its account.
+			name: "an unverified address adopts the account when the operator trusts it",
+			seed: func(t *testing.T, ctx context.Context, st *store.Store) {
+				mustCreate(t, ctx, st, &store.User{Email: "her@example.com", IsAdmin: true})
+			},
+			oidcCfg: config.OIDCConfig{TrustUnverifiedEmail: true},
+			claims:  auth.Claims{Subject: "sub-1", Email: "her@example.com", EmailVerified: false},
+			check: func(t *testing.T, ctx context.Context, st *store.Store, got *store.User) {
+				if got.Email != "her@example.com" {
+					t.Errorf("Email = %q, want the pre-authorised account adopted", got.Email)
+				}
+				if got.OIDCSubject != "sub-1" {
+					t.Errorf("OIDCSubject = %q, want it bound on first sign-in", got.OIDCSubject)
+				}
+			},
+		},
+		{
 			name:    "an unknown identity is refused when auto-provisioning is off",
 			claims:  auth.Claims{Subject: "sub-1", Email: "stranger@example.com", EmailVerified: true},
 			wantErr: auth.ErrOIDCNotAllowed,

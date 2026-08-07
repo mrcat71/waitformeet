@@ -32,6 +32,7 @@ data:
   WFM_OIDC_DISPLAY_NAME: {{ .Values.auth.oidc.displayName | quote }}
   WFM_OIDC_SCOPES: {{ join "," .Values.auth.oidc.scopes | quote }}
   WFM_OIDC_GROUPS_CLAIM: {{ .Values.auth.oidc.groupsClaim | quote }}
+  WFM_OIDC_TRUST_UNVERIFIED_EMAIL: {{ .Values.auth.oidc.trustUnverifiedEmail | quote }}
   WFM_OIDC_AUTO_PROVISION: {{ .Values.auth.oidc.autoProvision | quote }}
   {{- with .Values.auth.oidc.allowedGroups }}
   WFM_OIDC_ALLOWED_GROUPS: {{ join "," . | quote }}

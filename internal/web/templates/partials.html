@@ -29,7 +29,7 @@
 <footer class="site-footer">
   <form method="get" action="" class="lang-switch">
     <label for="lang">{{.T "language.label"}}</label>
-    <select id="lang" name="lang" onchange="this.form.submit()">
+    <select id="lang" name="lang">
       {{$current := .Locale}}
       {{range .Locales}}
         <option value="{{.Tag}}"{{if eq .Tag $current}} selected{{end}}>{{.Name}}</option>

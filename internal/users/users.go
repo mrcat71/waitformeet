@@ -213,7 +213,7 @@ func (s *Service) ResolveOIDC(ctx context.Context, oidcCfg config.OIDCConfig, cl
 		return nil, err
 	}
 
-	if claims.Email != "" && claims.EmailVerified {
+	if claims.Email != "" && (claims.EmailVerified || oidcCfg.TrustUnverifiedEmail) {
 		user, err := s.store.UserByEmail(ctx, claims.Email)
 		switch {
 		case err == nil:

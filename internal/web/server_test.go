@@ -231,6 +231,7 @@ func TestRouteAccessMatrix(t *testing.T) {
 				{"admin", admin, tt.admin},
 			} {
 				resp := ts.get(t, who.client, tt.path)
+				defer resp.Body.Close()
 				if resp.StatusCode != who.want {
 					t.Errorf("%s GET %s = %d, want %d", who.name, tt.path, resp.StatusCode, who.want)
 				}
@@ -319,6 +320,7 @@ func TestSectionVisibility(t *testing.T) {
 				{"admin", ts.signIn(t, "admin@example.com", true), tt.adminSees},
 			} {
 				resp := ts.get(t, who.client, "/")
+				defer resp.Body.Close()
 				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					t.Fatalf("read the home page: %v", err)
@@ -369,6 +371,7 @@ func TestSafeReturnTo(t *testing.T) {
 func TestSecurityHeaders(t *testing.T) {
 	ts := newTestServer(t)
 	resp := ts.get(t, ts.newClient(), "/")
+	defer resp.Body.Close()
 
 	for header, want := range map[string]string{
 		"X-Content-Type-Options": "nosniff",
@@ -400,6 +403,7 @@ func TestPrivatePagesAreNoIndex(t *testing.T) {
 				client = ts.newClient()
 			}
 			resp := ts.get(t, client, path)
+			defer resp.Body.Close()
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatalf("read %s: %v", path, err)
