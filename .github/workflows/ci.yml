@@ -18,7 +18,7 @@ env:
 jobs:
   go:
     name: Go
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 
@@ -47,7 +47,7 @@ jobs:
 
   lint:
     name: golangci-lint
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 
@@ -62,7 +62,7 @@ jobs:
 
   assets:
     name: Frontend
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 
@@ -95,7 +95,7 @@ jobs:
 
   helm:
     name: Helm chart
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 
@@ -159,7 +159,7 @@ jobs:
 
   docker:
     name: Image
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 

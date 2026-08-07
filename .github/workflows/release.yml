@@ -21,7 +21,7 @@ env:
 jobs:
   image:
     name: Build and push the image
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
 
@@ -34,8 +34,6 @@ jobs:
             version="${GITHUB_REF#refs/tags/}"
           fi
           echo "version=${version#v}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
 
@@ -55,12 +53,12 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      # arm64 as well as amd64: a home cluster is as likely to be running on a Pi
-      # or an Ampere node as on x86.
+      # The ARC runner is a node in the target cluster (amd64), so a native build
+      # already matches the deployment arch. Add docker/setup-qemu-action and a
+      # platforms list here only if you need to publish other arches.
       - uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -71,7 +69,7 @@ jobs:
 
   chart:
     name: Package and push the chart
-    runs-on: ubuntu-latest
+    runs-on: waitformeet
     needs: image
     steps:
       - uses: actions/checkout@v7
