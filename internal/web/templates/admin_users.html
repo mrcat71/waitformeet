@@ -1,0 +1,100 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+
+{{if .InviteLink}}
+  <section class="card card--highlight">
+    <h2 class="card__heading">{{.T "admin.users.invite"}}</h2>
+    <p>{{.T "admin.users.invite_created" "expires" .InviteExpires}}</p>
+    <p class="scroll-x"><code class="invite-link">{{.InviteLink}}</code></p>
+  </section>
+{{end}}
+
+<section class="card">
+  <h2 class="card__heading">{{.T "admin.users.heading"}}</h2>
+  <p class="field__hint">{{.T "admin.users.hint"}}</p>
+
+  {{range .Users}}
+    <form method="post" action="/admin/users/{{.ID}}" class="form form--row">
+      <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+
+      <div class="user-row__head">
+        <strong>{{.Email}}</strong>
+        {{if .IsSelf}}<span class="pill">{{.IsSelf}}</span>{{end}}
+        {{if .SSOLinked}}<span class="pill">{{$.T "admin.users.sso_linked"}}</span>{{end}}
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>{{$.T "admin.field.display_name"}}</label>
+          <input name="display_name" type="text" value="{{.DisplayName}}" maxlength="80">
+        </div>
+        <p class="field__hint">{{$.T "admin.users.last_login"}}: {{.LastLogin}}</p>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" name="is_admin" value="1"{{if .IsAdmin}} checked{{end}}>
+        <span>{{$.T "admin.field.is_admin"}}</span>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" name="disabled" value="1"{{if .Disabled}} checked{{end}}>
+        <span>{{$.T "admin.field.disabled"}}</span>
+      </label>
+
+      <div class="form__actions">
+        <button type="submit" class="button">{{$.T "action.save"}}</button>
+        {{if not .IsSelf}}
+          <button type="submit" class="button button--danger"
+                  formaction="/admin/users/{{.ID}}/delete">{{$.T "action.delete"}}</button>
+        {{end}}
+      </div>
+    </form>
+  {{end}}
+</section>
+
+<form method="post" action="/admin/users/invite" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <h2 class="card__heading">{{.T "admin.users.invite_heading"}}</h2>
+
+  <div class="grid-2">
+    <div class="field">
+      <label for="email">{{.T "admin.field.email"}}</label>
+      <input id="email" name="email" type="email" required>
+    </div>
+
+    <div class="field">
+      <label for="display_name">{{.T "admin.field.display_name"}}</label>
+      <input id="display_name" name="display_name" type="text" maxlength="80">
+    </div>
+  </div>
+
+  <label class="checkbox">
+    <input type="checkbox" name="is_admin" value="1">
+    <span>{{.T "admin.field.is_admin"}}</span>
+  </label>
+
+  <div class="form__actions">
+    <button type="submit" class="button button--primary">{{.T "admin.users.invite"}}</button>
+  </div>
+</form>
+
+<section class="card">
+  <h2 class="card__heading">{{.T "admin.users.pending_heading"}}</h2>
+  {{if .Invites}}
+    <ul class="list">
+      {{range .Invites}}
+        <li class="list__row">
+          <span class="list__main">{{.Email}}</span>
+          <span class="list__meta">{{.ExpiresLabel}}{{if .IsAdmin}} · {{$.T "admin.field.is_admin"}}{{end}}</span>
+          <form method="post" action="/admin/invites/{{.ID}}/delete" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+            <button type="submit" class="link-button">{{$.T "action.delete"}}</button>
+          </form>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p class="empty">{{.T "admin.users.none_pending"}}</p>
+  {{end}}
+</section>
+{{- end}}

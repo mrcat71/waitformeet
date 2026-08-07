@@ -1,0 +1,8 @@
+{{define "content" -}}
+<section class="card card--narrow card--centred">
+  <p class="error-code" aria-hidden="true">{{.Status}}</p>
+  <h1 class="card__heading">{{.Heading}}</h1>
+  <p class="card__intro">{{.Body}}</p>
+  <p><a class="button" href="/">{{.T "nav.home"}}</a></p>
+</section>
+{{- end}}

@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "waitformeet.fullname" . }}
+  labels:
+    {{- include "waitformeet.labels" . | nindent 4 }}
+data:
+  WFM_LISTEN_ADDR: ":8080"
+  WFM_DATA_DIR: /data
+  WFM_BASE_URL: {{ .Values.config.baseURL | quote }}
+  WFM_LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  WFM_COOKIE_SECURE: {{ .Values.config.cookieSecure | quote }}
+  WFM_SESSION_TTL: {{ .Values.config.sessionTTL | quote }}
+  WFM_MAX_UPLOAD_BYTES: {{ .Values.config.maxUploadBytes | quote }}
+  WFM_METRICS_ENABLED: {{ .Values.config.metricsEnabled | quote }}
+  WFM_SEED_MODE: {{ .Values.config.seedMode | quote }}
+  WFM_SEED_FILE: /etc/waitformeet/seed.json
+  WFM_LOCAL_AUTH_ENABLED: {{ .Values.auth.local.enabled | quote }}
+  {{- with .Values.config.trustedProxies }}
+  WFM_TRUSTED_PROXIES: {{ join "," . | quote }}
+  {{- end }}
+  {{- with .Values.config.ogFontPath }}
+  WFM_OG_FONT_PATH: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.auth.bootstrap.email }}
+  WFM_BOOTSTRAP_ADMIN_EMAIL: {{ . | quote }}
+  {{- end }}
+  {{- if .Values.auth.oidc.enabled }}
+  WFM_OIDC_ENABLED: "true"
+  WFM_OIDC_ISSUER: {{ .Values.auth.oidc.issuer | quote }}
+  WFM_OIDC_CLIENT_ID: {{ .Values.auth.oidc.clientID | quote }}
+  WFM_OIDC_DISPLAY_NAME: {{ .Values.auth.oidc.displayName | quote }}
+  WFM_OIDC_SCOPES: {{ join "," .Values.auth.oidc.scopes | quote }}
+  WFM_OIDC_GROUPS_CLAIM: {{ .Values.auth.oidc.groupsClaim | quote }}
+  WFM_OIDC_AUTO_PROVISION: {{ .Values.auth.oidc.autoProvision | quote }}
+  {{- with .Values.auth.oidc.allowedGroups }}
+  WFM_OIDC_ALLOWED_GROUPS: {{ join "," . | quote }}
+  {{- end }}
+  {{- with .Values.auth.oidc.allowedDomains }}
+  WFM_OIDC_ALLOWED_DOMAINS: {{ join "," . | quote }}
+  {{- end }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "waitformeet.fullname" . }}-seed
+  labels:
+    {{- include "waitformeet.labels" . | nindent 4 }}
+data:
+  # The starting content. With seedMode "once" this only applies to an empty
+  # database; with "always" it is re-applied on every start and the matching fields
+  # become read-only in the admin UI.
+  seed.json: |
+    {{- include "waitformeet.seedJSON" . | nindent 4 }}

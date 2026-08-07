@@ -1,0 +1,13 @@
+.git
+.github
+.gitignore
+.golangci.yml
+bin/
+tmp-data/
+coverage.out
+node_modules/
+deploy/
+*.md
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,254 @@
+# waitformeet
+#
+# Two layers of configuration live here. Everything under `config` and `content` is
+# the deployment's own setup. Everything under `content` is only a starting point:
+# by default it seeds an empty database once and the admin UI owns it afterwards.
+# Set `config.seedMode: always` to make this file the permanent source of truth.
+
+image:
+  repository: ghcr.io/mrcat71/waitformeet
+  # Empty means the chart's appVersion, which is what you usually want.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# The site keeps its state in one SQLite file on a ReadWriteOnce volume, so it runs
+# as exactly one replica. The schema refuses anything higher rather than letting a
+# second pod corrupt the database.
+replicaCount: 1
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# Distroless nonroot is uid/gid 65532. fsGroup has to match, or the volume is not
+# writable by the process.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  # cert-manager example:
+  #   cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: waitformeet.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: waitformeet-tls
+  #    hosts:
+  #      - waitformeet.example.com
+
+persistence:
+  enabled: true
+  # Point at a volume you already have instead of letting the chart create one.
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+  annotations: {}
+  # Keeping the claim after an uninstall is the safer default for something holding
+  # photographs and letters.
+  keepOnDelete: true
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# The probes are deliberately different. Liveness only asks whether the process is
+# alive, so a slow database does not get the pod restarted; readiness checks that
+# the database actually answers.
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  periodSeconds: 20
+  timeoutSeconds: 3
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  periodSeconds: 3
+  failureThreshold: 20
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+extraEnv: []
+extraEnvFrom: []
+
+config:
+  # The address the site is reached at. OIDC redirects and invitation links are
+  # built from it, so it has to be right.
+  baseURL: https://waitformeet.example.com
+  logLevel: info
+  # Leave true for any real deployment. Only turn it off for plain http locally.
+  cookieSecure: true
+  sessionTTL: 720h
+  maxUploadBytes: 16mb
+  metricsEnabled: true
+  # once   seed an empty database and then let the admin UI own the content
+  # always re-apply this file on every start, making it the source of truth
+  # never  ignore the content block entirely
+  seedMode: once
+  # CIDRs of the proxies in front of the site. Without these, X-Forwarded-For is
+  # ignored and the login rate limiter sees the ingress controller's address for
+  # everyone. With them, it sees the real client.
+  trustedProxies: []
+  # Path to a TTF or OTF inside the container for the link-preview image. Without
+  # one the preview shows the day count alone, which still previews fine.
+  ogFontPath: ""
+
+auth:
+  local:
+    enabled: true
+  # The first admin. On an empty database, a password creates the account outright;
+  # without one, a single-use invitation link is printed to the log so the password
+  # is chosen by the person rather than living in a Secret forever.
+  bootstrap:
+    email: ""
+    password: ""
+  # Leave empty and the chart generates one on first install, then preserves it
+  # across upgrades. Setting it explicitly is only necessary for GitOps.
+  sessionSecret: ""
+
+  oidc:
+    enabled: false
+    issuer: https://auth.example.com/application/o/waitformeet/
+    clientID: ""
+    clientSecret: ""
+    displayName: Authentik
+    scopes:
+      - openid
+      - profile
+      - email
+    groupsClaim: groups
+    # Off by default. Normally an admin pre-authorises somebody in the UI and their
+    # first sign-in binds the identity. Turning this on lets anyone matching the
+    # rules below get an editor account on their own.
+    autoProvision: false
+    allowedGroups: []
+    allowedDomains: []
+
+# Reference secrets you manage yourself (sealed-secrets, External Secrets, SOPS)
+# instead of putting them in values. Keys not listed fall back to the values above.
+existingSecret:
+  name: ""
+  keys:
+    sessionSecret: sessionSecret
+    bootstrapPassword: bootstrapPassword
+    oidcClientSecret: oidcClientSecret
+
+# The initial content. Dates without an offset are read in the timezone next to
+# them, or in `content.timezone` when they have none of their own.
+content:
+  siteTitle: ""
+  tagline: ""
+  timezone: UTC
+  defaultLocale: en
+  accentColor: "#e5687f"
+  # The day you were last together. Anchors the progress bar and the days-apart count.
+  separatedAt: ""
+
+  partnerA:
+    name: ""
+    city: ""
+    timezone: ""
+  partnerB:
+    name: ""
+    city: ""
+    timezone: ""
+
+  # The headline countdown.
+  main: {}
+  #  title: our reunion
+  #  emoji: "✈"
+  #  at: "2026-12-24T10:00"
+  #  timezone: Asia/Shanghai
+
+  milestones: []
+  #  - title: visa approved
+  #    emoji: "📄"
+  #    at: "2026-09-01"
+
+  quotes: []
+  #  - text: One day closer every day.
+  #    locale: en
+
+  # Who sees what. public | logged-in | admin. Admins can change these in the UI
+  # unless seedMode is `always`.
+  visibility:
+    countdown: public
+    clocks: public
+    milestones: public
+    notes: logged-in
+    gallery: logged-in
+
+  features:
+    quotes: false
+    # Needs egress from the pod to api.open-meteo.com.
+    weather: false
+    # When the headline date passes, move on to the next one rather than sitting at zero.
+    autoAdvance: true
+
+metrics:
+  serviceMonitor:
+    enabled: false
+    interval: 60s
+    labels: {}
+
+networkPolicy:
+  enabled: false
+  # Where the site may reach out to. OIDC discovery and the weather service both
+  # need egress; DNS is added automatically.
+  allowedEgressPorts:
+    - 443
+
+# There is deliberately no backup CronJob here. Every automated option is worse than
+# it looks: hitting /admin/export needs a real admin session, and a second pod
+# cannot mount the ReadWriteOnce volume while the site is running. Use the Download
+# a backup button in the admin UI, or snapshot the volume with whatever your cluster
+# already uses for that. The README goes through both.

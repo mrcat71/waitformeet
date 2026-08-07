@@ -1,0 +1,32 @@
+{{define "content" -}}
+<section class="card card--narrow">
+  <h1 class="card__heading">{{.T "auth.invite.heading"}}</h1>
+
+  {{if .Invalid}}
+    <p class="empty">{{.T "auth.invite.invalid"}}</p>
+    <p><a href="/">{{.T "nav.home"}}</a></p>
+  {{else}}
+    <p class="card__intro">{{.T "auth.invite.intro" "email" .Email}}</p>
+
+    <form method="post" action="/invite" class="form">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="token" value="{{.Token}}">
+
+      <div class="field">
+        <label for="password">{{.T "auth.invite.password"}}</label>
+        <input id="password" name="password" type="password"
+               autocomplete="new-password" required minlength="{{.MinPasswordLen}}" autofocus>
+        <p class="field__hint">{{.T "auth.password_hint" "min" .MinPasswordLen}}</p>
+      </div>
+
+      <div class="field">
+        <label for="confirm">{{.T "auth.invite.confirm"}}</label>
+        <input id="confirm" name="confirm" type="password"
+               autocomplete="new-password" required minlength="{{.MinPasswordLen}}">
+      </div>
+
+      <button type="submit" class="button button--primary">{{.T "auth.invite.submit"}}</button>
+    </form>
+  {{end}}
+</section>
+{{- end}}

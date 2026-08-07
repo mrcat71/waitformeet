@@ -1,0 +1,23 @@
+{{define "content" -}}
+{{if .Countdown}}
+  {{template "countdown" .}}
+{{else}}
+  <section class="countdown countdown--empty">
+    <h1 class="countdown__heading">{{.T "countdown.none"}}</h1>
+    <p class="empty">{{.T "countdown.none_hint"}}</p>
+  </section>
+{{end}}
+
+{{if .Progress}}{{template "progress" .}}{{end}}
+
+{{if .Clocks}}{{template "clocks" .}}{{end}}
+
+{{if .Quote}}
+  <section class="quote">
+    <h2 class="section-heading">{{.T "quote.heading"}}</h2>
+    <blockquote class="quote__text">{{.Quote}}</blockquote>
+  </section>
+{{end}}
+
+{{if .ShowMilestones}}{{template "milestones" .}}{{end}}
+{{- end}}

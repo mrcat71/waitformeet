@@ -1,0 +1,18 @@
+# Build output
+/bin/
+coverage.out
+
+# Local runtime data: the SQLite database and uploaded pictures
+/tmp-data/
+
+# Editors
+.DS_Store
+.idea/
+.vscode/
+
+# Node is only ever used for `tsc --noEmit`; nothing here should be committed
+node_modules/
+package-lock.json
+
+# The bundled JavaScript under internal/web/static/dist IS committed on purpose,
+# so that `go build` works from a fresh clone with no JavaScript toolchain.

@@ -1,0 +1,9 @@
+{
+  "//": "The service worker needs the WebWorker lib, which conflicts with DOM (both declare self, addEventListener and friends), so it is checked separately.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "WebWorker"]
+  },
+  "include": ["web/src/sw.ts"],
+  "exclude": []
+}

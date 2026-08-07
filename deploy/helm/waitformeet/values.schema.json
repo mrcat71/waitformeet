@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "waitformeet values",
+  "type": "object",
+  "properties": {
+    "replicaCount": {
+      "description": "Must stay 1. The site keeps its state in one SQLite file on a ReadWriteOnce volume, so a second pod would either fail to schedule or corrupt the database.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      },
+      "required": ["repository"]
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "baseURL": {
+          "description": "The address the site is reached at. OIDC redirects and invitation links are built from it.",
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "logLevel": { "type": "string", "enum": ["debug", "info", "warn", "error"] },
+        "cookieSecure": { "type": "boolean" },
+        "sessionTTL": {
+          "description": "A Go duration such as 720h.",
+          "type": "string",
+          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+        },
+        "maxUploadBytes": {
+          "description": "A byte count, optionally with a suffix such as 16mb.",
+          "type": "string",
+          "pattern": "^[0-9]+\\s*(b|k|m|g|kb|mb|gb|kib|mib|gib)?$"
+        },
+        "metricsEnabled": { "type": "boolean" },
+        "seedMode": {
+          "description": "once seeds an empty database and then lets the UI own the content; always re-applies on every start; never ignores the content block.",
+          "type": "string",
+          "enum": ["once", "always", "never"]
+        },
+        "trustedProxies": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ogFontPath": { "type": "string" }
+      },
+      "required": ["baseURL", "seedMode"]
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "local": {
+          "type": "object",
+          "properties": { "enabled": { "type": "boolean" } }
+        },
+        "bootstrap": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "password": { "type": "string" }
+          }
+        },
+        "sessionSecret": { "type": "string" },
+        "oidc": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "issuer": { "type": "string" },
+            "clientID": { "type": "string" },
+            "clientSecret": { "type": "string" },
+            "displayName": { "type": "string" },
+            "scopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "contains": { "const": "openid" }
+            },
+            "groupsClaim": { "type": "string" },
+            "autoProvision": { "type": "boolean" },
+            "allowedGroups": { "type": "array", "items": { "type": "string" } },
+            "allowedDomains": { "type": "array", "items": { "type": "string" } }
+          },
+          "allOf": [
+            {
+              "$comment": "OIDC needs an https issuer and a client, or discovery fails at startup.",
+              "if": {
+                "properties": { "enabled": { "const": true } },
+                "required": ["enabled"]
+              },
+              "then": {
+                "properties": {
+                  "issuer": { "type": "string", "pattern": "^https://" },
+                  "clientID": { "type": "string", "minLength": 1 }
+                },
+                "required": ["issuer", "clientID"]
+              }
+            },
+            {
+              "$comment": "Auto-provisioning with no restriction would let anyone the provider authenticates edit the site.",
+              "if": {
+                "properties": { "autoProvision": { "const": true } },
+                "required": ["autoProvision"]
+              },
+              "then": {
+                "anyOf": [
+                  { "properties": { "allowedGroups": { "minItems": 1 } }, "required": ["allowedGroups"] },
+                  { "properties": { "allowedDomains": { "minItems": 1 } }, "required": ["allowedDomains"] }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "existingClaim": { "type": "string" },
+        "storageClass": { "type": "string" },
+        "accessModes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany", "ReadWriteOncePod"] },
+          "minItems": 1
+        },
+        "size": { "type": "string", "pattern": "^[0-9]+(Ki|Mi|Gi|Ti|K|M|G|T)?$" },
+        "annotations": { "type": "object" },
+        "keepOnDelete": { "type": "boolean" }
+      }
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "siteTitle": { "type": "string" },
+        "tagline": { "type": "string" },
+        "timezone": { "type": "string" },
+        "defaultLocale": { "type": "string", "enum": ["en", "ru", "es", "zh-Hans"] },
+        "accentColor": { "type": "string", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$" },
+        "separatedAt": { "type": "string" },
+        "partnerA": { "$ref": "#/$defs/partner" },
+        "partnerB": { "$ref": "#/$defs/partner" },
+        "main": { "$ref": "#/$defs/event" },
+        "milestones": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+        "quotes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": { "type": "string", "minLength": 1 },
+              "locale": { "type": "string" }
+            },
+            "required": ["text"]
+          }
+        },
+        "visibility": {
+          "type": "object",
+          "properties": {
+            "countdown": { "$ref": "#/$defs/visibility" },
+            "clocks": { "$ref": "#/$defs/visibility" },
+            "milestones": { "$ref": "#/$defs/visibility" },
+            "notes": { "$ref": "#/$defs/visibility" },
+            "gallery": { "$ref": "#/$defs/visibility" }
+          }
+        },
+        "features": {
+          "type": "object",
+          "properties": {
+            "quotes": { "type": "boolean" },
+            "weather": { "type": "boolean" },
+            "autoAdvance": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "annotations": { "type": "object" },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "host": { "type": "string", "minLength": 1 },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" },
+                    "pathType": { "type": "string", "enum": ["Exact", "Prefix", "ImplementationSpecific"] }
+                  },
+                  "required": ["path", "pathType"]
+                }
+              }
+            },
+            "required": ["host"]
+          }
+        },
+        "tls": { "type": "array" }
+      }
+    },
+    "existingSecret": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "keys": {
+          "type": "object",
+          "properties": {
+            "sessionSecret": { "type": "string", "minLength": 1 },
+            "bootstrapPassword": { "type": "string", "minLength": 1 },
+            "oidcClientSecret": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "metrics": { "type": "object" },
+    "networkPolicy": { "type": "object" },
+    "service": { "type": "object" },
+    "serviceAccount": { "type": "object" },
+    "resources": { "type": "object" },
+    "podSecurityContext": { "type": "object" },
+    "securityContext": { "type": "object" },
+    "livenessProbe": { "type": "object" },
+    "readinessProbe": { "type": "object" },
+    "startupProbe": { "type": "object" },
+    "podAnnotations": { "type": "object" },
+    "podLabels": { "type": "object" },
+    "nodeSelector": { "type": "object" },
+    "tolerations": { "type": "array" },
+    "affinity": { "type": "object" },
+    "topologySpreadConstraints": { "type": "array" },
+    "extraEnv": { "type": "array" },
+    "extraEnvFrom": { "type": "array" },
+    "imagePullSecrets": { "type": "array" },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" }
+  },
+  "$defs": {
+    "partner": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "timezone": {
+          "description": "An IANA name such as Asia/Shanghai.",
+          "type": "string"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "emoji": { "type": "string" },
+        "at": {
+          "description": "RFC 3339, or a local time such as 2026-12-24T10:00 read in the timezone beside it.",
+          "type": "string"
+        },
+        "timezone": { "type": "string" },
+        "description": { "type": "string" },
+        "hidden": { "type": "boolean" }
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "logged-in", "admin"]
+    }
+  }
+}

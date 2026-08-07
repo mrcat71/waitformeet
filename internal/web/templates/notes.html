@@ -1,0 +1,53 @@
+{{define "content" -}}
+{{if .OfTheDay}}
+  <section class="note-of-day">
+    <h2 class="section-heading">{{.T "notes.of_the_day"}}</h2>
+    <blockquote class="quote__text">
+      {{.OfTheDay.Body}}
+      {{if .OfTheDay.ByLabel}}<footer class="note__by">{{.OfTheDay.ByLabel}}</footer>{{end}}
+    </blockquote>
+  </section>
+{{end}}
+
+{{if .CanWrite}}
+  <form method="post" action="/notes" class="form card">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <h2 class="card__heading">{{.T "notes.compose"}}</h2>
+    <div class="field">
+      <label for="body">{{.T "notes.body_label"}}</label>
+      <textarea id="body" name="body" required maxlength="2000"
+                placeholder="{{.T "notes.body_placeholder"}}"></textarea>
+    </div>
+    <div class="form__actions">
+      <button type="submit" class="button button--primary">{{.T "notes.submit"}}</button>
+    </div>
+  </form>
+{{end}}
+
+<section class="notes">
+  <h1 class="section-heading">{{.T "notes.heading"}}</h1>
+
+  {{if .Notes}}
+    <ul class="note-list">
+      {{range .Notes}}
+        <li class="note{{if not .Visible}} note--hidden{{end}}">
+          <p class="note__body">{{.Body}}</p>
+          <p class="note__meta">
+            <time datetime="{{rfc3339 .CreatedAt}}">{{.DateLabel}}</time>
+            {{if .ByLabel}}<span>{{.ByLabel}}</span>{{end}}
+            {{if .Pinned}}<span class="pill">{{$.T "notes.pinned"}}</span>{{end}}
+            {{if $.CanWrite}}
+              <form method="post" action="/notes/{{.ID}}/delete" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <button type="submit" class="link-button">{{$.T "action.delete"}}</button>
+              </form>
+            {{end}}
+          </p>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p class="empty">{{.T "notes.none"}}</p>
+  {{end}}
+</section>
+{{- end}}

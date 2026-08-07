@@ -1,0 +1,45 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+
+<form method="post" action="/admin/site/visibility" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <h2 class="card__heading">{{.T "admin.visibility.heading"}}</h2>
+  <p class="field__hint">{{.T "admin.visibility.hint"}}</p>
+
+  {{$levels := .Levels}}
+  {{range .Sections}}
+    <div class="field">
+      <label for="visibility_{{.Key}}">{{.Label}}</label>
+      {{$current := .Current}}
+      <select id="visibility_{{.Key}}" name="visibility_{{.Key}}">
+        {{range $levels}}
+          <option value="{{.Value}}"{{if eq .Value $current}} selected{{end}}>{{.Label}}</option>
+        {{end}}
+      </select>
+    </div>
+  {{end}}
+
+  <div class="form__actions">
+    <button type="submit" class="button button--primary">{{.T "action.save"}}</button>
+  </div>
+</form>
+
+<section class="card">
+  <h2 class="card__heading">{{.T "admin.backup.heading"}}</h2>
+  <p class="field__hint">{{.T "admin.backup.hint"}}</p>
+
+  <p><a class="button" href="/admin/export" download>{{.T "admin.backup.export"}}</a></p>
+
+  <form method="post" action="/admin/import" enctype="multipart/form-data" class="form">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <div class="field">
+      <label for="backup">{{.T "admin.backup.import"}}</label>
+      <input id="backup" name="backup" type="file" accept=".zip,application/zip" required>
+      <p class="field__hint">{{.T "admin.backup.import_hint"}}</p>
+    </div>
+    <div class="form__actions">
+      <button type="submit" class="button button--danger">{{.T "admin.backup.import"}}</button>
+    </div>
+  </form>
+</section>
+{{- end}}

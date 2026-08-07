@@ -1,0 +1,47 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+
+<section class="card">
+  <h2 class="card__heading">{{.T "admin.quotes.heading"}}</h2>
+  <p class="field__hint">{{.T "admin.quotes.hint"}}</p>
+
+  {{if .Quotes}}
+    <ul class="list">
+      {{range .Quotes}}
+        <li class="list__row">
+          <span class="list__main">{{.Text}}</span>
+          <span class="list__meta">{{if .Locale}}{{.Locale}}{{else}}{{$.T "admin.quotes.any_locale"}}{{end}}</span>
+          <form method="post" action="/admin/quotes/{{.ID}}/delete" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+            <button type="submit" class="link-button">{{$.T "action.delete"}}</button>
+          </form>
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p class="empty">{{.T "admin.quotes.none"}}</p>
+  {{end}}
+</section>
+
+<form method="post" action="/admin/quotes" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <h2 class="card__heading">{{.T "admin.quotes.add"}}</h2>
+
+  <div class="field">
+    <label for="text">{{.T "admin.field.text"}}</label>
+    <input id="text" name="text" type="text" required maxlength="300">
+  </div>
+
+  <div class="field">
+    <label for="locale">{{.T "admin.field.locale"}}</label>
+    <select id="locale" name="locale">
+      <option value="">{{.T "admin.quotes.any_locale"}}</option>
+      {{range .Locales}}<option value="{{.Tag}}">{{.Name}}</option>{{end}}
+    </select>
+  </div>
+
+  <div class="form__actions">
+    <button type="submit" class="button button--primary">{{.T "action.add"}}</button>
+  </div>
+</form>
+{{- end}}

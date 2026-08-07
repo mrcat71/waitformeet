@@ -1,0 +1,36 @@
+{{define "content" -}}
+<section class="card card--narrow">
+  <h1 class="card__heading">{{.T "auth.sign_in.heading"}}</h1>
+  <p class="card__intro">{{.T "auth.sign_in.intro"}}</p>
+
+  {{if .LocalAuth}}
+    <form method="post" action="/login" class="form">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="return_to" value="{{.ReturnTo}}">
+
+      <div class="field">
+        <label for="email">{{.T "auth.email"}}</label>
+        <input id="email" name="email" type="email" autocomplete="username"
+               required value="{{.Email}}" autofocus>
+      </div>
+
+      <div class="field">
+        <label for="password">{{.T "auth.password"}}</label>
+        <input id="password" name="password" type="password"
+               autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="button button--primary">{{.T "auth.sign_in.submit"}}</button>
+    </form>
+  {{end}}
+
+  {{if .OIDCName}}
+    {{if .LocalAuth}}<p class="divider"><span>{{.T "auth.sign_in.or"}}</span></p>{{end}}
+    <form method="post" action="/auth/oidc/start" class="form">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+      <input type="hidden" name="return_to" value="{{.ReturnTo}}">
+      <button type="submit" class="button">{{.T "auth.sign_in.sso" "provider" .OIDCName}}</button>
+    </form>
+  {{end}}
+</section>
+{{- end}}

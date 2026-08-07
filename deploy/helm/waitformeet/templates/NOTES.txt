@@ -1,0 +1,65 @@
+{{ .Chart.Name }} {{ .Chart.AppVersion }} is installed as {{ .Release.Name }}.
+
+The site is at:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+{{- $scheme := "http" }}
+{{- if $.Values.ingress.tls }}{{ $scheme = "https" }}{{ end }}
+  {{ $scheme }}://{{ .host }}
+{{- end }}
+{{- else }}
+  No Ingress is enabled. To look at it locally:
+    kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "waitformeet.fullname" . }} 8080:{{ .Values.service.port }}
+  then open http://localhost:8080
+{{- end }}
+
+Signing in
+{{- if .Values.auth.bootstrap.email }}
+{{- if .Values.auth.bootstrap.password }}
+  The first admin is {{ .Values.auth.bootstrap.email }}, with the password from your values.
+  Change it in Settings once you are in, so the password stops living in a Secret.
+{{- else }}
+  A single-use invitation link for {{ .Values.auth.bootstrap.email }} was written to the
+  log the first time the pod started. Read it with:
+
+    kubectl --namespace {{ .Release.Namespace }} logs deploy/{{ include "waitformeet.fullname" . }} | grep invite
+
+  Open that link to choose your password. It is valid for seven days.
+{{- end }}
+{{- else if .Values.auth.oidc.enabled }}
+  Sign in through {{ .Values.auth.oidc.displayName }}.
+  {{- if not .Values.auth.oidc.autoProvision }}
+  Note that auto-provisioning is off, so an account has to exist before anyone can
+  sign in. Set auth.bootstrap.email to create the first one.
+  {{- end }}
+{{- else }}
+  WARNING: no way to sign in is configured. Nobody can edit the site.
+  Set auth.bootstrap.email, and optionally auth.bootstrap.password, then upgrade.
+{{- end }}
+
+{{- if eq .Values.config.seedMode "always" }}
+
+Content
+  seedMode is "always", so the content in your values is re-applied on every restart
+  and those fields are read-only in the admin UI. Edit values.yaml and upgrade to
+  change them.
+{{- end }}
+
+{{- if not .Values.persistence.enabled }}
+
+WARNING
+  Persistence is off. The database and every uploaded picture live in an emptyDir
+  and disappear when the pod restarts. Only do this for a look around.
+{{- end }}
+
+{{- if not .Values.config.cookieSecure }}
+
+WARNING
+  config.cookieSecure is false, so session cookies are sent over plain http.
+  Only do this locally.
+{{- end }}
+
+Backups
+  Settings, then Site, has a "Download a backup" button. It gives you one zip with
+  the database and every picture, and the form beside it restores from that zip.
+  Take one now and then; the volume is the only copy.

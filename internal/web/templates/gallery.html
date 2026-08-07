@@ -1,0 +1,60 @@
+{{define "content" -}}
+{{if .CanUpload}}
+  <form method="post" action="/gallery" enctype="multipart/form-data" class="form card">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <h2 class="card__heading">{{.T "gallery.upload"}}</h2>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="picture">{{.T "gallery.file_label"}}</label>
+        <input id="picture" name="picture" type="file" accept="image/*" required>
+      </div>
+
+      <div class="field">
+        <label for="caption">{{.T "gallery.caption_label"}}</label>
+        <input id="caption" name="caption" type="text" maxlength="200">
+      </div>
+    </div>
+
+    <div class="form__actions">
+      <button type="submit" class="button button--primary">{{.T "gallery.upload"}}</button>
+    </div>
+  </form>
+{{end}}
+
+<section class="gallery">
+  <h1 class="section-heading">{{.T "gallery.heading"}}</h1>
+
+  {{if .Media}}
+    <ul class="gallery__grid" data-lightbox>
+      {{range .Media}}
+        <li class="gallery__item">
+          {{/* The link is a real one, so the gallery works without JavaScript; the
+               lightbox only intercepts the click when it is available. */}}
+          <a href="/media/original/{{.Filename}}" data-lightbox-item
+             data-caption="{{.Caption}}">
+            <img src="/media/thumb/{{.ThumbFilename}}" alt="{{.Caption}}"
+                 loading="lazy" decoding="async">
+          </a>
+          {{if .Caption}}<p class="gallery__caption">{{.Caption}}</p>{{end}}
+          {{if $.CanUpload}}
+            <form method="post" action="/gallery/{{.ID}}/delete" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+              <button type="submit" class="link-button">{{$.T "action.delete"}}</button>
+            </form>
+          {{end}}
+        </li>
+      {{end}}
+    </ul>
+  {{else}}
+    <p class="empty">{{.T "gallery.none"}}</p>
+  {{end}}
+</section>
+
+<dialog class="lightbox" data-lightbox-dialog aria-label="{{.T "gallery.heading"}}">
+  <button type="button" class="lightbox__close" data-lightbox-close
+          aria-label="{{.T "gallery.close"}}">&times;</button>
+  <img class="lightbox__image" data-lightbox-image alt="">
+  <p class="lightbox__caption" data-lightbox-caption></p>
+</dialog>
+{{- end}}

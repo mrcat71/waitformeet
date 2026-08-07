@@ -1,0 +1,83 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+
+<form method="post" action="/admin/events/main" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <h2 class="card__heading">{{.T "admin.events.main_heading"}}</h2>
+  <p class="field__hint">{{.T "admin.events.main_hint"}}</p>
+  {{template "event_fields" dict "Page" . "Event" .Main}}
+  <div class="form__actions">
+    <button type="submit" class="button button--primary">{{.T "action.save"}}</button>
+  </div>
+</form>
+
+<section class="card">
+  <h2 class="card__heading">{{.T "admin.events.milestones_heading"}}</h2>
+
+  {{if .Milestones}}
+    {{range .Milestones}}
+      <form method="post" action="/admin/events/milestone/{{.ID}}" class="form form--row">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        {{template "event_fields" dict "Page" $ "Event" .}}
+        <div class="form__actions">
+          <button type="submit" class="button">{{$.T "action.save"}}</button>
+          <button type="submit" class="button button--danger"
+                  formaction="/admin/events/milestone/{{.ID}}/delete">{{$.T "action.delete"}}</button>
+        </div>
+      </form>
+    {{end}}
+  {{else}}
+    <p class="empty">{{.T "admin.events.none"}}</p>
+  {{end}}
+</section>
+
+<form method="post" action="/admin/events/milestone" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <h2 class="card__heading">{{.T "admin.events.add"}}</h2>
+  {{template "event_fields" dict "Page" . "Event" (newEvent .Main.Timezone)}}
+  <div class="form__actions">
+    <button type="submit" class="button button--primary">{{.T "action.add"}}</button>
+  </div>
+</form>
+
+{{template "timezone_datalist" .}}
+{{- end}}
+
+
+{{define "event_fields" -}}
+{{- $page := .Page -}}
+{{- $event := .Event -}}
+<div class="grid-2">
+  <div class="field">
+    <label>{{$page.T "admin.field.title"}}</label>
+    <input name="title" type="text" value="{{$event.Title}}" required maxlength="120">
+  </div>
+
+  <div class="field">
+    <label>{{$page.T "admin.field.emoji"}}</label>
+    <input name="emoji" type="text" value="{{$event.Emoji}}" maxlength="8">
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="field">
+    <label>{{$page.T "admin.field.at"}}</label>
+    <input name="at" type="datetime-local" value="{{$event.Local}}" required>
+  </div>
+
+  <div class="field">
+    <label>{{$page.T "admin.field.timezone"}}</label>
+    <input name="timezone" type="text" value="{{$event.Timezone}}" list="timezones" maxlength="60">
+  </div>
+</div>
+
+<div class="field">
+  <label>{{$page.T "admin.field.description"}}</label>
+  <input name="description" type="text" value="{{$event.Description}}" maxlength="300">
+</div>
+
+<label class="checkbox">
+  <input type="checkbox" name="hidden" value="1"{{if $event.Hidden}} checked{{end}}>
+  <span>{{$page.T "admin.field.hidden"}}</span>
+</label>
+{{- end}}

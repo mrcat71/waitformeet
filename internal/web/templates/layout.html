@@ -1,0 +1,40 @@
+{{define "layout" -}}
+<!doctype html>
+<html lang="{{.Locale}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<meta name="description" content="{{.Description}}">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{.Title}}">
+<meta property="og:description" content="{{.Description}}">
+<meta name="twitter:card" content="summary_large_image">
+
+{{if .NoIndex}}<meta name="robots" content="noindex, nofollow">{{end}}
+
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/static/app.css?v={{.AssetVersion}}">
+<style>:root { --accent: {{accent .Settings.AccentColor}}; }</style>
+</head>
+
+<body data-server-now="{{rfc3339 .ServerNow}}"{{if .SWURL}} data-sw-url="{{.SWURL}}"{{end}}>
+<a class="skip-link" href="#main">{{.T "nav.skip_to_content"}}</a>
+
+{{template "header" .}}
+
+<main id="main" class="main">
+  {{if .Error}}<p class="banner banner--error" role="alert">{{.Error}}</p>{{end}}
+  {{if .Notice}}<p class="banner banner--notice" role="status">{{.Notice}}</p>{{end}}
+  {{template "content" .}}
+</main>
+
+{{template "footer" .}}
+
+<script type="module" src="/static/dist/app.js?v={{.AssetVersion}}"></script>
+</body>
+</html>
+{{- end}}

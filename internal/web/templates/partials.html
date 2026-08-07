@@ -1,0 +1,146 @@
+{{define "header" -}}
+<header class="site-header">
+  <a class="site-header__title" href="/">{{.Title}}</a>
+
+  <nav class="site-nav" aria-label="{{.T "nav.home"}}">
+    {{if .ShowNotes}}<a href="/notes">{{.T "nav.notes"}}</a>{{end}}
+    {{if .ShowGallery}}<a href="/gallery">{{.T "nav.gallery"}}</a>{{end}}
+    {{if .User}}
+      <a href="/admin">{{.T "nav.admin"}}</a>
+      <form method="post" action="/logout" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        <button type="submit" class="link-button">{{.T "nav.sign_out"}}</button>
+      </form>
+    {{else}}
+      <a href="/login">{{.T "nav.sign_in"}}</a>
+    {{end}}
+
+    <button type="button" class="icon-button" data-theme-toggle
+            title="{{.T "theme.toggle"}}" aria-label="{{.T "theme.toggle"}}" aria-pressed="false">
+      <span class="icon-button__sun" aria-hidden="true">☀</span>
+      <span class="icon-button__moon" aria-hidden="true">☾</span>
+    </button>
+  </nav>
+</header>
+{{- end}}
+
+
+{{define "footer" -}}
+<footer class="site-footer">
+  <form method="get" action="" class="lang-switch">
+    <label for="lang">{{.T "language.label"}}</label>
+    <select id="lang" name="lang" onchange="this.form.submit()">
+      {{$current := .Locale}}
+      {{range .Locales}}
+        <option value="{{.Tag}}"{{if eq .Tag $current}} selected{{end}}>{{.Name}}</option>
+      {{end}}
+    </select>
+    <noscript><button type="submit">{{.T "language.label"}}</button></noscript>
+  </form>
+</footer>
+{{- end}}
+
+
+{{/* The server fills in every value so the page reads correctly before any
+     JavaScript runs, and still reads correctly if it never does. Dot stays the page
+     throughout so .T remains reachable; section data is bound to a variable. */}}
+{{define "countdown" -}}
+{{- $c := .Countdown -}}
+<section class="countdown" data-countdown data-target="{{rfc3339 $c.Event.TargetAt}}">
+  <h1 class="countdown__heading">{{.T "countdown.heading" "title" $c.Event.Title}}</h1>
+
+  <div class="countdown__units">
+    {{range $c.Units}}
+      <div class="countdown__unit">
+        <span class="countdown__value" data-unit="{{.Key}}">{{.Display}}</span>
+        <span class="countdown__label" data-unit-label="{{.Key}}"
+              data-forms="{{jsonAttr .Forms}}">{{.Label}}</span>
+      </div>
+    {{end}}
+  </div>
+
+  <p class="countdown__target"><time datetime="{{rfc3339 $c.Event.TargetAt}}">{{$c.TargetLabel}}</time></p>
+  <p class="countdown__reached">{{.T "countdown.reached"}} {{.T "countdown.reached_note"}}</p>
+</section>
+{{- end}}
+
+
+{{define "progress" -}}
+{{- $p := .Progress -}}
+<section class="progress" data-progress
+         data-start="{{rfc3339 $p.SeparatedAt}}" data-end="{{rfc3339 $p.TargetAt}}">
+  <p class="progress__apart" data-apart data-forms="{{jsonAttr $p.ApartForms}}">{{$p.ApartLabel}}</p>
+  <div class="progress__track" role="progressbar"
+       aria-label="{{.T "progress.aria"}}" aria-valuemin="0" aria-valuemax="100"
+       aria-valuenow="{{$p.Percent}}">
+    <div class="progress__bar" data-progress-bar style="--progress: {{$p.Fraction}}"></div>
+  </div>
+  <p class="progress__percent" data-progress-percent>{{$p.PercentLabel}}</p>
+</section>
+{{- end}}
+
+
+{{define "clocks" -}}
+<section class="clocks">
+  <h2 class="section-heading">{{.T "clocks.heading"}}</h2>
+  <div class="clocks__row">
+    {{range .Clocks}}
+      <div class="clock {{if .IsDay}}is-day{{else}}is-night{{end}}" data-clock="{{.Timezone}}">
+        <p class="clock__who">{{.Name}}</p>
+        <p class="clock__time" data-clock-time>{{.Time}}</p>
+        <p class="clock__date" data-clock-date>{{.Date}}</p>
+        <p class="clock__where">{{.City}}</p>
+        {{if .Weather}}<p class="clock__weather"><span class="clock__weather-icon" aria-hidden="true">{{.WeatherIcon}}</span>{{.Weather}}</p>{{end}}
+      </div>
+    {{end}}
+  </div>
+</section>
+{{- end}}
+
+
+{{define "milestones" -}}
+<section class="milestones">
+  <h2 class="section-heading">{{.T "milestones.heading"}}</h2>
+  {{if .Milestones}}
+    <ol class="timeline">
+      {{range .Milestones}}
+        <li class="timeline__item {{if .Passed}}is-past{{else}}is-future{{end}}">
+          <span class="timeline__marker" aria-hidden="true">{{if .Emoji}}{{.Emoji}}{{else}}&bull;{{end}}</span>
+          <div class="timeline__body">
+            <p class="timeline__title">{{.Title}}</p>
+            <p class="timeline__when">
+              <time datetime="{{rfc3339 .TargetAt}}">{{.DateLabel}}</time>
+              <span class="timeline__relative">{{.RelativeLabel}}</span>
+            </p>
+            {{if .Description}}<p class="timeline__note">{{.Description}}</p>{{end}}
+          </div>
+        </li>
+      {{end}}
+    </ol>
+  {{else}}
+    <p class="empty">{{.T "milestones.none"}}</p>
+  {{end}}
+</section>
+{{- end}}
+
+
+{{define "admin_nav" -}}
+<nav class="admin-nav" aria-label="{{.T "admin.heading"}}">
+  <a href="/admin"{{if eq .Tab "content"}} aria-current="page"{{end}}>{{.T "admin.tab.content"}}</a>
+  <a href="/admin/events"{{if eq .Tab "events"}} aria-current="page"{{end}}>{{.T "admin.tab.events"}}</a>
+  <a href="/admin/quotes"{{if eq .Tab "quotes"}} aria-current="page"{{end}}>{{.T "admin.tab.quotes"}}</a>
+  {{if .IsAdmin}}
+    <a href="/admin/users"{{if eq .Tab "users"}} aria-current="page"{{end}}>{{.T "admin.tab.users"}}</a>
+    <a href="/admin/site"{{if eq .Tab "site"}} aria-current="page"{{end}}>{{.T "admin.tab.site"}}</a>
+  {{end}}
+</nav>
+{{- end}}
+
+
+{{/* A datalist rather than a select: the curated list covers the common cases while
+     any other IANA name can still be typed in. */}}
+{{define "timezone_datalist" -}}
+<datalist id="timezones">
+  {{range .Timezones}}<option value="{{.}}"></option>{{end}}
+</datalist>
+{{- end}}

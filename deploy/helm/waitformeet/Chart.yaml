@@ -1,0 +1,20 @@
+apiVersion: v2
+name: waitformeet
+description: A self-hosted countdown site for two people apart, with an editable admin UI and state on a PersistentVolume.
+type: application
+
+# Chart API v2 on purpose. Helm 4 runs v2 charts unchanged, while the v3 format is
+# still experimental and disabled by default.
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - countdown
+  - couple
+  - self-hosted
+home: https://github.com/mrcat71/waitformeet
+sources:
+  - https://github.com/mrcat71/waitformeet
+maintainers:
+  - name: mrcat71
+    url: https://github.com/mrcat71

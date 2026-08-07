@@ -1,0 +1,98 @@
+{{define "content" -}}
+{{template "admin_nav" .}}
+
+<form method="post" action="/admin" class="form card">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <fieldset class="fieldset"{{if .SeedLocked}} disabled{{end}}>
+    <h2 class="card__heading">{{.T "admin.content.heading"}}</h2>
+    {{if .SeedLocked}}<p class="banner banner--notice">{{.T "admin.locked_by_seed"}}</p>{{end}}
+
+    <div class="field">
+      <label for="site_title">{{.T "admin.field.site_title"}}</label>
+      <input id="site_title" name="site_title" type="text" value="{{.Settings.SiteTitle}}" maxlength="120">
+    </div>
+
+    <div class="field">
+      <label for="tagline">{{.T "admin.field.tagline"}}</label>
+      <input id="tagline" name="tagline" type="text" value="{{.Settings.Tagline}}" maxlength="200">
+    </div>
+
+    <div class="grid-2">
+      {{template "partner_fields" dict "Page" . "Prefix" "partner_a" "Legend" (.T "admin.partner_a") "Partner" .Settings.PartnerA}}
+      {{template "partner_fields" dict "Page" . "Prefix" "partner_b" "Legend" (.T "admin.partner_b") "Partner" .Settings.PartnerB}}
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="separated_at">{{.T "admin.field.separated_at"}}</label>
+        <input id="separated_at" name="separated_at" type="date" value="{{dateInput .Settings.SeparatedAt}}">
+        <p class="field__hint">{{.T "admin.field.separated_at_hint"}}</p>
+      </div>
+
+      <div class="field">
+        <label for="accent_color">{{.T "admin.field.accent"}}</label>
+        <input id="accent_color" name="accent_color" type="color" value="{{.Settings.AccentColor}}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="default_locale">{{.T "admin.field.default_locale"}}</label>
+      <select id="default_locale" name="default_locale">
+        {{$current := .Settings.DefaultLocale}}
+        {{range .Locales}}
+          <option value="{{.Tag}}"{{if eq .Tag $current}} selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
+    </div>
+
+    <h3 class="section-heading">{{.T "admin.features.heading"}}</h3>
+
+    <label class="checkbox">
+      <input type="checkbox" name="quotes_enabled" value="1"{{if .Settings.QuotesEnabled}} checked{{end}}>
+      <span>{{.T "admin.features.quotes"}}</span>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="weather_enabled" value="1"{{if .Settings.WeatherEnabled}} checked{{end}}>
+      <span>{{.T "admin.features.weather"}}</span>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="auto_advance" value="1"{{if .Settings.AutoAdvance}} checked{{end}}>
+      <span>{{.T "admin.features.auto_advance"}}</span>
+    </label>
+    <p class="field__hint">{{.T "admin.features.auto_advance_hint"}}</p>
+
+    <div class="form__actions">
+      <button type="submit" class="button button--primary">{{.T "action.save"}}</button>
+    </div>
+  </fieldset>
+</form>
+
+{{template "timezone_datalist" .}}
+{{- end}}
+
+
+{{define "partner_fields" -}}
+{{- $page := .Page -}}
+<fieldset class="fieldset fieldset--boxed">
+  <legend>{{.Legend}}</legend>
+
+  <div class="field">
+    <label for="{{.Prefix}}_name">{{$page.T "admin.field.name"}}</label>
+    <input id="{{.Prefix}}_name" name="{{.Prefix}}_name" type="text" value="{{.Partner.Name}}" maxlength="80">
+  </div>
+
+  <div class="field">
+    <label for="{{.Prefix}}_city">{{$page.T "admin.field.city"}}</label>
+    <input id="{{.Prefix}}_city" name="{{.Prefix}}_city" type="text" value="{{.Partner.City}}" maxlength="80">
+  </div>
+
+  <div class="field">
+    <label for="{{.Prefix}}_timezone">{{$page.T "admin.field.timezone"}}</label>
+    <input id="{{.Prefix}}_timezone" name="{{.Prefix}}_timezone" type="text"
+           value="{{.Partner.Timezone}}" list="timezones" maxlength="60">
+    <p class="field__hint">{{$page.T "admin.field.timezone_hint"}}</p>
+  </div>
+</fieldset>
+{{- end}}
