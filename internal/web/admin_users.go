@@ -244,7 +244,6 @@ func visibilitySections(settings *store.Settings) []struct {
 	}{
 		{"countdown", &settings.Visibility.Countdown},
 		{"clocks", &settings.Visibility.Clocks},
-		{"milestones", &settings.Visibility.Milestones},
 		{"notes", &settings.Visibility.Notes},
 		{"gallery", &settings.Visibility.Gallery},
 	}

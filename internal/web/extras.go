@@ -40,7 +40,7 @@ func (s *Server) handleOGImage(w http.ResponseWriter, r *http.Request) {
 		FontPath: s.cfg.OGFontPath,
 	}
 
-	event, err := s.headlineEvent(ctx, settings, now)
+	event, err := s.headlineEvent(ctx)
 	if err != nil {
 		s.serverError(w, r, err)
 		return
@@ -99,25 +99,6 @@ func (s *Server) handleCalendar(w http.ResponseWriter, r *http.Request) {
 			Description: main.Description,
 			Start:       main.TargetAt,
 		})
-	}
-
-	if auth.CanSee(ctx, settings.Visibility.Milestones) {
-		milestones, err := s.store.Milestones(ctx, false)
-		if err != nil {
-			s.serverError(w, r, err)
-			return
-		}
-		for _, m := range milestones {
-			events = append(events, render.CalendarEvent{
-				UID:         fmt.Sprintf("event-%d@waitformeet", m.ID),
-				Summary:     m.Title,
-				Description: m.Description,
-				Start:       m.TargetAt,
-				// A milestone set to exactly midnight was meant as a day, not a
-				// moment, so it becomes an all-day entry.
-				AllDay: m.TargetAt.Hour() == 0 && m.TargetAt.Minute() == 0,
-			})
-		}
 	}
 
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
@@ -263,13 +244,8 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	gauge("waitformeet_photos", "Pictures in the gallery.", float64(len(pictures)))
 
-	settings, err := s.store.Settings(ctx)
-	if err != nil {
-		s.serverError(w, r, err)
-		return
-	}
 	now := time.Now().UTC()
-	if event, err := s.headlineEvent(ctx, settings, now); err == nil && event != nil {
+	if event, err := s.headlineEvent(ctx); err == nil && event != nil {
 		gauge("waitformeet_seconds_remaining",
 			"Seconds until the headline countdown reaches zero.",
 			max(0, event.TargetAt.Sub(now).Seconds()))

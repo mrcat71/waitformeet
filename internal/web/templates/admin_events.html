@@ -11,35 +11,6 @@
   </div>
 </form>
 
-<section class="card">
-  <h2 class="card__heading">{{.T "admin.events.milestones_heading"}}</h2>
-
-  {{if .Milestones}}
-    {{range .Milestones}}
-      <form method="post" action="/admin/events/milestone/{{.ID}}" class="form form--row">
-        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-        {{template "event_fields" dict "Page" $ "Event" .}}
-        <div class="form__actions">
-          <button type="submit" class="button">{{$.T "action.save"}}</button>
-          <button type="submit" class="button button--danger"
-                  formaction="/admin/events/milestone/{{.ID}}/delete">{{$.T "action.delete"}}</button>
-        </div>
-      </form>
-    {{end}}
-  {{else}}
-    <p class="empty">{{.T "admin.events.none"}}</p>
-  {{end}}
-</section>
-
-<form method="post" action="/admin/events/milestone" class="form card">
-  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-  <h2 class="card__heading">{{.T "admin.events.add"}}</h2>
-  {{template "event_fields" dict "Page" . "Event" (newEvent .Main.Timezone)}}
-  <div class="form__actions">
-    <button type="submit" class="button button--primary">{{.T "action.add"}}</button>
-  </div>
-</form>
-
 {{template "timezone_datalist" .}}
 {{- end}}
 

@@ -39,23 +39,6 @@
   "clocks.day": "день",
   "clocks.night": "ночь",
 
-  "milestones.heading": "По дороге",
-  "milestones.upcoming": "Ещё впереди",
-  "milestones.past": "Уже позади",
-  "milestones.none": "На линии времени пока пусто.",
-  "milestones.in_days": {
-    "one": "через {count} день",
-    "few": "через {count} дня",
-    "many": "через {count} дней",
-    "other": "через {count} дня"
-  },
-  "milestones.today": "сегодня",
-  "milestones.days_ago": {
-    "one": "{count} день назад",
-    "few": "{count} дня назад",
-    "many": "{count} дней назад",
-    "other": "{count} дня назад"
-  },
 
   "notes.heading": "Записки",
   "notes.none": "Записок пока нет. Оставьте первую.",
@@ -130,14 +113,9 @@
   "admin.features.heading": "Дополнительно",
   "admin.features.quotes": "Показывать строку дня",
   "admin.features.weather": "Показывать погоду в обоих городах",
-  "admin.features.auto_advance": "Переходить к следующей дате, когда текущая наступила",
-  "admin.features.auto_advance_hint": "Счётчик будет считать до чего-то, а не стоять на нуле.",
 
   "admin.events.main_heading": "Главный отсчёт",
   "admin.events.main_hint": "Время указывается в выбранном ниже часовом поясе.",
-  "admin.events.milestones_heading": "По дороге",
-  "admin.events.add": "Добавить дату",
-  "admin.events.none": "Дат пока нет.",
   "admin.field.title": "Название",
   "admin.field.emoji": "Эмодзи",
   "admin.field.at": "Когда",
@@ -182,7 +160,6 @@
   "admin.visibility.admin": "Только админы",
   "admin.section.countdown": "Отсчёт",
   "admin.section.clocks": "Часы",
-  "admin.section.milestones": "Даты",
   "admin.section.notes": "Записки",
   "admin.section.gallery": "Фото",
   "admin.backup.heading": "Резервная копия",

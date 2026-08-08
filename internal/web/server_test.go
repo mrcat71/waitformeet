@@ -250,7 +250,6 @@ func TestUnsafeMethodsRequireCSRF(t *testing.T) {
 		"/auth/oidc/start",
 		"/admin",
 		"/admin/events/main",
-		"/admin/events/milestone",
 		"/admin/quotes",
 		"/admin/users/invite",
 		"/admin/site/visibility",

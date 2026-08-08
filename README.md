@@ -2,8 +2,8 @@
 
 A small self-hosted site that counts down to the day two people are together again.
 
-It shows a live countdown, the current time in both cities, the milestones along the
-way, and, behind a login, the notes and photographs that are nobody else's business.
+It shows a live countdown, the current time in both cities, and, behind a login,
+the notes and photographs that are nobody else's business.
 Everything is editable in the browser, so changing a date does not mean a redeploy.
 
 Built to be handed to somebody else: a second deployment for a different couple and
@@ -17,10 +17,10 @@ a different date needs only a different `values.yaml`.
   timezones, so daylight saving is somebody else's problem.
 - **Progress**: days apart, and how far along you are between the day you parted and
   the day you meet.
-- **Milestones**: a visa, a flight, an anniversary, each with its own mini countdown.
-- **Notes**: short messages with a note of the day, chosen so you both see the same one.
-- **Photos**: a gallery with a lightbox. Uploads are re-encoded, which strips the GPS
-  coordinates phones write into pictures.
+- **Notes**: short messages with a note of the day, chosen so you both see the same
+  one. The note of the day also opens the front page.
+- **Photos**: a gallery with a lightbox, and the most recent few on the front page.
+  Uploads are re-encoded, which strips the GPS coordinates phones write into pictures.
 - **Confetti** when the countdown reaches zero.
 - **Link previews**: pasting the URL into a messenger shows the day count as an image.
 - **Calendar export**: the dates as an `.ics` file your phone will import.
@@ -34,15 +34,16 @@ a different date needs only a different `values.yaml`.
 
 Two levels, and no more:
 
-- **Anyone signed in** can edit the content: dates, milestones, notes, photos, the
-  daily lines, and the site's own name and colours.
+- **Anyone signed in** can edit the content: dates, notes, photos, the daily lines,
+  and the site's own name and colours.
 - **An admin** additionally manages the list of people and decides which sections are
   public.
 
-Each section (countdown, clocks, milestones, notes, gallery) is independently set to
-`public`, `logged-in` or `admin`. Out of the box the countdown is public and the notes
-and photos are not, which is usually the right shape: a countdown is nice to share, a
-photograph of the two of you is not.
+Each section (countdown, clocks, notes, gallery) is independently set to `public`,
+`logged-in` or `admin`. Out of the box the countdown is public and the notes and
+photos are not, which is usually the right shape: a countdown is nice to share, a
+photograph of the two of you is not. The front page honours the same settings: the
+note and the photographs appear there only for somebody allowed to see them.
 
 Signing in works by password, through an identity provider over OIDC, or both. New
 people are added by an invitation link: only its hash is stored, it works once, and

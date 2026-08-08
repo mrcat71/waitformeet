@@ -1,6 +1,6 @@
 {{define "header" -}}
 <header class="site-header">
-  <a class="site-header__title" href="/">{{.Title}}</a>
+  <a class="site-header__title" href="/">{{.SiteTitle}}</a>
 
   <nav class="site-nav" aria-label="{{.T "nav.home"}}">
     {{if .ShowNotes}}<a href="/notes">{{.T "nav.notes"}}</a>{{end}}
@@ -94,32 +94,6 @@
       </div>
     {{end}}
   </div>
-</section>
-{{- end}}
-
-
-{{define "milestones" -}}
-<section class="milestones">
-  <h2 class="section-heading">{{.T "milestones.heading"}}</h2>
-  {{if .Milestones}}
-    <ol class="timeline">
-      {{range .Milestones}}
-        <li class="timeline__item {{if .Passed}}is-past{{else}}is-future{{end}}">
-          <span class="timeline__marker" aria-hidden="true">{{if .Emoji}}{{.Emoji}}{{else}}&bull;{{end}}</span>
-          <div class="timeline__body">
-            <p class="timeline__title">{{.Title}}</p>
-            <p class="timeline__when">
-              <time datetime="{{rfc3339 .TargetAt}}">{{.DateLabel}}</time>
-              <span class="timeline__relative">{{.RelativeLabel}}</span>
-            </p>
-            {{if .Description}}<p class="timeline__note">{{.Description}}</p>{{end}}
-          </div>
-        </li>
-      {{end}}
-    </ol>
-  {{else}}
-    <p class="empty">{{.T "milestones.none"}}</p>
-  {{end}}
 </section>
 {{- end}}
 

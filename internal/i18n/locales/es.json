@@ -37,19 +37,6 @@
   "clocks.day": "de día",
   "clocks.night": "de noche",
 
-  "milestones.heading": "En el camino",
-  "milestones.upcoming": "Todavía por delante",
-  "milestones.past": "Ya pasó",
-  "milestones.none": "La línea de tiempo está vacía.",
-  "milestones.in_days": {
-    "one": "en {count} día",
-    "other": "en {count} días"
-  },
-  "milestones.today": "hoy",
-  "milestones.days_ago": {
-    "one": "hace {count} día",
-    "other": "hace {count} días"
-  },
 
   "notes.heading": "Notas",
   "notes.none": "Todavía no hay notas. Deja la primera.",
@@ -124,14 +111,9 @@
   "admin.features.heading": "Extras",
   "admin.features.quotes": "Mostrar una frase del día",
   "admin.features.weather": "Mostrar el tiempo en las dos ciudades",
-  "admin.features.auto_advance": "Pasar a la siguiente fecha cuando llegue la actual",
-  "admin.features.auto_advance_hint": "Así la cuenta sigue apuntando a algo en vez de quedarse en cero.",
 
   "admin.events.main_heading": "La cuenta atrás principal",
   "admin.events.main_hint": "La hora se escribe en la zona horaria elegida abajo.",
-  "admin.events.milestones_heading": "En el camino",
-  "admin.events.add": "Añadir una fecha",
-  "admin.events.none": "Todavía no hay fechas.",
   "admin.field.title": "Título",
   "admin.field.emoji": "Emoji",
   "admin.field.at": "Cuándo",
@@ -176,7 +158,6 @@
   "admin.visibility.admin": "Solo administradores",
   "admin.section.countdown": "Cuenta atrás",
   "admin.section.clocks": "Relojes",
-  "admin.section.milestones": "Fechas",
   "admin.section.notes": "Notas",
   "admin.section.gallery": "Fotos",
   "admin.backup.heading": "Copia de seguridad",

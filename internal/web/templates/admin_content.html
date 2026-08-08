@@ -57,12 +57,6 @@
       <span>{{.T "admin.features.weather"}}</span>
     </label>
 
-    <label class="checkbox">
-      <input type="checkbox" name="auto_advance" value="1"{{if .Settings.AutoAdvance}} checked{{end}}>
-      <span>{{.T "admin.features.auto_advance"}}</span>
-    </label>
-    <p class="field__hint">{{.T "admin.features.auto_advance_hint"}}</p>
-
     <div class="form__actions">
       <button type="submit" class="button button--primary">{{.T "action.save"}}</button>
     </div>

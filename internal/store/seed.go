@@ -30,7 +30,6 @@ type Seed struct {
 	DefaultLocale string          `json:"defaultLocale"`
 	SeparatedAt   string          `json:"separatedAt"`
 	Main          *SeedEvent      `json:"main"`
-	Milestones    []SeedEvent     `json:"milestones"`
 	Quotes        []SeedQuote     `json:"quotes"`
 	Visibility    *SeedVisibility `json:"visibility"`
 	Features      SeedFeatures    `json:"features"`
@@ -65,18 +64,16 @@ type SeedQuote struct {
 
 // SeedVisibility overrides the default per-section visibility.
 type SeedVisibility struct {
-	Countdown  string `json:"countdown"`
-	Clocks     string `json:"clocks"`
-	Milestones string `json:"milestones"`
-	Notes      string `json:"notes"`
-	Gallery    string `json:"gallery"`
+	Countdown string `json:"countdown"`
+	Clocks    string `json:"clocks"`
+	Notes     string `json:"notes"`
+	Gallery   string `json:"gallery"`
 }
 
 // SeedFeatures toggles the optional extras.
 type SeedFeatures struct {
-	Quotes      bool  `json:"quotes"`
-	Weather     bool  `json:"weather"`
-	AutoAdvance *bool `json:"autoAdvance"`
+	Quotes  bool `json:"quotes"`
+	Weather bool `json:"weather"`
 }
 
 // LoadSeedFile reads and parses a seed document. A missing file is not an error:
@@ -109,7 +106,7 @@ func (s *Store) SeedApplied(ctx context.Context) (bool, error) {
 
 // ApplySeed writes the seed into the database.
 //
-// The seed owns settings, the main event, milestones and quotes; it replaces them
+// The seed owns settings, the main event and quotes; it replaces them
 // wholesale so that a GitOps deployment converges rather than accumulating
 // duplicates on every restart. Notes and pictures are left untouched.
 func (s *Store) ApplySeed(ctx context.Context, seed *Seed) error {
@@ -125,7 +122,7 @@ func (s *Store) ApplySeed(ctx context.Context, seed *Seed) error {
 		return err
 	}
 
-	mainEvent, milestones, err := seed.events()
+	mainEvent, err := seed.mainEvent()
 	if err != nil {
 		return err
 	}
@@ -136,9 +133,6 @@ func (s *Store) ApplySeed(ctx context.Context, seed *Seed) error {
 			return err
 		}
 
-		if _, err := tx.ExecContext(ctx, `DELETE FROM events WHERE kind = ?`, KindMilestone); err != nil {
-			return fmt.Errorf("store: clear seeded milestones: %w", err)
-		}
 		if _, err := tx.ExecContext(ctx, `DELETE FROM quotes`); err != nil {
 			return fmt.Errorf("store: clear seeded quotes: %w", err)
 		}
@@ -148,12 +142,6 @@ func (s *Store) ApplySeed(ctx context.Context, seed *Seed) error {
 				return fmt.Errorf("store: clear seeded main event: %w", err)
 			}
 			if err := insertEventTx(ctx, tx, mainEvent, now); err != nil {
-				return err
-			}
-		}
-		for i := range milestones {
-			milestones[i].SortOrder = i
-			if err := insertEventTx(ctx, tx, &milestones[i], now); err != nil {
 				return err
 			}
 		}
@@ -209,7 +197,6 @@ func (seed *Seed) applyTo(set *Settings) error {
 		}{
 			{v.Countdown, &set.Visibility.Countdown, "countdown"},
 			{v.Clocks, &set.Visibility.Clocks, "clocks"},
-			{v.Milestones, &set.Visibility.Milestones, "milestones"},
 			{v.Notes, &set.Visibility.Notes, "notes"},
 			{v.Gallery, &set.Visibility.Gallery, "gallery"},
 		} {
@@ -226,30 +213,20 @@ func (seed *Seed) applyTo(set *Settings) error {
 
 	set.QuotesEnabled = seed.Features.Quotes
 	set.WeatherEnabled = seed.Features.Weather
-	if seed.Features.AutoAdvance != nil {
-		set.AutoAdvance = *seed.Features.AutoAdvance
-	}
 
 	return set.validate()
 }
 
-// events converts the seed's dated entries into store events.
-func (seed *Seed) events() (main *Event, milestones []Event, err error) {
-	if seed.Main != nil {
-		e, err := seed.Main.toEvent(KindMain, seed.Timezone)
-		if err != nil {
-			return nil, nil, fmt.Errorf("store: seed main event: %w", err)
-		}
-		main = &e
+// mainEvent converts the seed's headline date into a store event.
+func (seed *Seed) mainEvent() (*Event, error) {
+	if seed.Main == nil {
+		return nil, nil
 	}
-	for i, m := range seed.Milestones {
-		e, err := m.toEvent(KindMilestone, seed.Timezone)
-		if err != nil {
-			return nil, nil, fmt.Errorf("store: seed milestone %d (%q): %w", i+1, m.Title, err)
-		}
-		milestones = append(milestones, e)
+	e, err := seed.Main.toEvent(KindMain, seed.Timezone)
+	if err != nil {
+		return nil, fmt.Errorf("store: seed main event: %w", err)
 	}
-	return main, milestones, nil
+	return &e, nil
 }
 
 func (se SeedEvent) toEvent(kind EventKind, defaultTZ string) (Event, error) {
@@ -330,16 +307,16 @@ func (s *Store) saveSettingsTx(ctx context.Context, tx *sql.Tx, set *Settings, n
 		partner_a_name = ?, partner_a_city = ?, partner_a_timezone = ?,
 		partner_b_name = ?, partner_b_city = ?, partner_b_timezone = ?,
 		accent_color = ?, default_locale = ?, background_media_id = ?, separated_at = ?,
-		vis_countdown = ?, vis_clocks = ?, vis_milestones = ?, vis_notes = ?, vis_gallery = ?,
-		quotes_enabled = ?, weather_enabled = ?, auto_advance = ?, updated_at = ?
+		vis_countdown = ?, vis_clocks = ?, vis_notes = ?, vis_gallery = ?,
+		quotes_enabled = ?, weather_enabled = ?, updated_at = ?
 		WHERE id = 1`,
 		set.SiteTitle, set.Tagline,
 		set.PartnerA.Name, set.PartnerA.City, set.PartnerA.Timezone,
 		set.PartnerB.Name, set.PartnerB.City, set.PartnerB.Timezone,
 		set.AccentColor, set.DefaultLocale, set.BackgroundMediaID, unixPtr(set.SeparatedAt),
-		set.Visibility.Countdown, set.Visibility.Clocks, set.Visibility.Milestones,
+		set.Visibility.Countdown, set.Visibility.Clocks,
 		set.Visibility.Notes, set.Visibility.Gallery,
-		set.QuotesEnabled, set.WeatherEnabled, set.AutoAdvance, set.UpdatedAt.Unix())
+		set.QuotesEnabled, set.WeatherEnabled, set.UpdatedAt.Unix())
 	if err != nil {
 		return fmt.Errorf("store: save seeded settings: %w", err)
 	}

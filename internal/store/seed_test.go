@@ -160,7 +160,6 @@ func TestLoadSeedFile(t *testing.T) {
 }
 
 func fullSeed() *Seed {
-	autoAdvance := false
 	return &Seed{
 		SiteTitle:     "Until we meet",
 		Tagline:       "soon",
@@ -171,13 +170,9 @@ func fullSeed() *Seed {
 		DefaultLocale: "en",
 		SeparatedAt:   "2026-03-01",
 		Main:          &SeedEvent{Title: "Reunion", At: "2026-12-24T10:00"},
-		Milestones: []SeedEvent{
-			{Title: "Visa", At: "2026-09-01"},
-			{Title: "Flights booked", At: "2026-10-01", Hidden: true},
-		},
-		Quotes:     []SeedQuote{{Text: "hello"}, {Text: "привет", Locale: "ru"}},
-		Visibility: &SeedVisibility{Gallery: "public"},
-		Features:   SeedFeatures{Quotes: true, AutoAdvance: &autoAdvance},
+		Quotes:        []SeedQuote{{Text: "hello"}, {Text: "привет", Locale: "ru"}},
+		Visibility:    &SeedVisibility{Gallery: "public"},
+		Features:      SeedFeatures{Quotes: true},
 	}
 }
 
@@ -208,9 +203,6 @@ func TestApplySeed(t *testing.T) {
 	if !set.QuotesEnabled {
 		t.Error("QuotesEnabled = false, want true")
 	}
-	if set.AutoAdvance {
-		t.Error("AutoAdvance = true, want the explicit false from the seed")
-	}
 	if set.SeparatedAt == nil {
 		t.Fatal("SeparatedAt = nil, want the seeded date")
 	}
@@ -222,17 +214,6 @@ func TestApplySeed(t *testing.T) {
 	// 10:00 in Shanghai is 02:00 UTC.
 	if want := time.Date(2026, 12, 24, 2, 0, 0, 0, time.UTC); !main.TargetAt.Equal(want) {
 		t.Errorf("main TargetAt = %v, want %v", main.TargetAt, want)
-	}
-
-	milestones, err := s.Milestones(ctx, true)
-	if err != nil {
-		t.Fatalf("Milestones() error = %v", err)
-	}
-	if len(milestones) != 2 {
-		t.Fatalf("milestones = %v, want 2", titles(milestones))
-	}
-	if milestones[1].Visible {
-		t.Error("the milestone marked hidden is visible")
 	}
 
 	quotes, err := s.Quotes(ctx, "", false)
@@ -262,14 +243,6 @@ func TestApplySeedIsConvergent(t *testing.T) {
 		if err := s.ApplySeed(ctx, fullSeed()); err != nil {
 			t.Fatalf("ApplySeed() run %d error = %v", i+1, err)
 		}
-	}
-
-	milestones, err := s.Milestones(ctx, true)
-	if err != nil {
-		t.Fatalf("Milestones() error = %v", err)
-	}
-	if len(milestones) != 2 {
-		t.Errorf("milestones after three runs = %d, want 2", len(milestones))
 	}
 
 	quotes, err := s.Quotes(ctx, "", false)
@@ -343,8 +316,8 @@ func TestApplySeedRejectsBadInput(t *testing.T) {
 			wantMsg: "cannot parse",
 		},
 		{
-			name:    "milestone without a title",
-			seed:    &Seed{Milestones: []SeedEvent{{At: "2026-09-01"}}},
+			name:    "main event without a title",
+			seed:    &Seed{Main: &SeedEvent{At: "2026-09-01"}},
 			wantMsg: "title must not be empty",
 		},
 		{

@@ -19,5 +19,41 @@
   </section>
 {{end}}
 
-{{if .ShowMilestones}}{{template "milestones" .}}{{end}}
+{{/* The note and the photographs are each rendered only for a visitor allowed to
+     see that section, so a private wall stays private on an otherwise public page. */}}
+{{if .Note}}
+  <section class="home-note">
+    <blockquote class="home-note__text">{{.Note.Body}}</blockquote>
+    <p class="home-note__meta">
+      {{if .Note.ByLabel}}<span>{{.Note.ByLabel}}</span>{{end}}
+      <time datetime="{{rfc3339 .Note.CreatedAt}}">{{.Note.DateLabel}}</time>
+    </p>
+    {{if .ShowNotes}}<a class="home-more" href="/notes">{{.T "notes.heading"}}</a>{{end}}
+  </section>
+{{end}}
+
+{{if .Photos}}
+  <section class="home-photos">
+    <ul class="home-photos__strip" data-lightbox>
+      {{range .Photos}}
+        <li class="home-photos__item">
+          {{/* A real link, so the strip works without JavaScript; the lightbox only
+               intercepts the click when it is available. */}}
+          <a href="/media/original/{{.Filename}}" data-lightbox-item data-caption="{{.Caption}}">
+            <img src="/media/thumb/{{.ThumbFilename}}" alt="{{.Caption}}"
+                 loading="lazy" decoding="async">
+          </a>
+        </li>
+      {{end}}
+    </ul>
+    <a class="home-more" href="/gallery">{{.T "gallery.heading"}}</a>
+  </section>
+
+  <dialog class="lightbox" data-lightbox-dialog aria-label="{{.T "gallery.heading"}}">
+    <button type="button" class="lightbox__close" data-lightbox-close
+            aria-label="{{.T "gallery.close"}}">&times;</button>
+    <img class="lightbox__image" data-lightbox-image alt="">
+    <p class="lightbox__caption" data-lightbox-caption></p>
+  </dialog>
+{{end}}
 {{- end}}

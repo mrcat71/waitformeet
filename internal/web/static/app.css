@@ -416,66 +416,105 @@ a:hover {
   font-size: 0.9rem;
 }
 
-/* Timeline */
+/* The note of the day and the photographs, as they appear on the front page.
+   Both are deliberately quiet: the countdown stays the loudest thing on the page,
+   and these sit under it like something left on the kitchen table. */
 
-.timeline {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.home-note {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin: clamp(2rem, 7vw, 3.5rem) auto 0;
+  max-width: 46ch;
+  text-align: center;
 }
 
-.timeline__item {
-  display: grid;
-  grid-template-columns: 2rem 1fr;
-  gap: 0.85rem;
-  align-items: start;
-  background: var(--bg-raised);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.9rem 1.1rem;
+/* The opening quotation mark is decoration, not content, so it is drawn rather
+   than written and stays out of the accessibility tree. */
+.home-note::before {
+  content: "\201C";
+  font-size: 3.4rem;
+  line-height: 0.8;
+  color: color-mix(in oklab, var(--accent) 55%, transparent);
 }
 
-.timeline__item.is-past {
-  opacity: 0.62;
-}
-
-.timeline__marker {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: color-mix(in oklab, var(--accent) 16%, var(--bg));
-  font-size: 1rem;
-}
-
-.timeline__body p {
+.home-note__text {
   margin: 0;
+  font-size: clamp(1.15rem, 3.2vw, 1.5rem);
+  line-height: 1.5;
+  text-wrap: balance;
+  white-space: pre-line;
 }
 
-.timeline__title {
-  font-weight: 600;
-}
-
-.timeline__when {
-  font-size: 0.88rem;
-  color: var(--text-muted);
+.home-note__meta {
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5rem;
-}
-
-.timeline__relative::before {
-  content: "· ";
-}
-
-.timeline__note {
-  margin-top: 0.35rem !important;
   color: var(--text-muted);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
+}
+
+.home-photos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: clamp(2rem, 7vw, 3.5rem);
+}
+
+/* A single row that scrolls sideways rather than reflowing: a strip of pictures
+   reads as a strip, and on a phone it stays one gesture wide. */
+.home-photos__strip {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+  display: flex;
+  gap: 0.7rem;
+  overflow-x: auto;
+  max-width: 100%;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.home-photos__item {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+}
+
+.home-photos__item img {
+  display: block;
+  width: clamp(7rem, 22vw, 10rem);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 150ms ease;
+}
+
+.home-photos__item a:hover img,
+.home-photos__item a:focus-visible img {
+  transform: translateY(-2px) scale(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-photos__item img {
+    transition: none;
+  }
+
+  .home-photos__item a:hover img,
+  .home-photos__item a:focus-visible img {
+    transform: none;
+  }
+}
+
+.home-more {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-decoration-color: color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 /* Quote */

@@ -145,7 +145,6 @@
         "partnerA": { "$ref": "#/$defs/partner" },
         "partnerB": { "$ref": "#/$defs/partner" },
         "main": { "$ref": "#/$defs/event" },
-        "milestones": { "type": "array", "items": { "$ref": "#/$defs/event" } },
         "quotes": {
           "type": "array",
           "items": {
@@ -162,7 +161,6 @@
           "properties": {
             "countdown": { "$ref": "#/$defs/visibility" },
             "clocks": { "$ref": "#/$defs/visibility" },
-            "milestones": { "$ref": "#/$defs/visibility" },
             "notes": { "$ref": "#/$defs/visibility" },
             "gallery": { "$ref": "#/$defs/visibility" }
           }
@@ -171,8 +169,7 @@
           "type": "object",
           "properties": {
             "quotes": { "type": "boolean" },
-            "weather": { "type": "boolean" },
-            "autoAdvance": { "type": "boolean" }
+            "weather": { "type": "boolean" }
           }
         }
       }

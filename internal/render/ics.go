@@ -22,8 +22,8 @@ type CalendarEvent struct {
 	Summary     string
 	Description string
 	Start       time.Time
-	// AllDay renders the entry as a whole-day event, which is what a milestone
-	// with no meaningful time of day should be.
+	// AllDay renders the entry as a whole-day event, which is what a date with no
+	// meaningful time of day should be.
 	AllDay bool
 }
 

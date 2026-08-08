@@ -9,18 +9,16 @@ import (
 	"time"
 )
 
-// EventKind distinguishes the one headline countdown from the milestones around it.
+// EventKind tags a row in the events table.
 type EventKind string
 
 const (
 	// KindMain is the headline countdown. At most one row may hold it, enforced by
 	// a partial unique index rather than by convention.
 	KindMain EventKind = "main"
-	// KindMilestone is any other dated thing on the timeline.
-	KindMilestone EventKind = "milestone"
 )
 
-// Event is a dated thing the site counts towards or remembers.
+// Event is a dated thing the site counts towards.
 type Event struct {
 	ID          int64
 	Kind        EventKind
@@ -80,54 +78,6 @@ func (s *Store) Event(ctx context.Context, id int64) (*Event, error) {
 	return &e, nil
 }
 
-// Milestones returns milestone events ordered by their target, oldest first.
-// includeHidden is for the admin UI; the public page passes false.
-func (s *Store) Milestones(ctx context.Context, includeHidden bool) ([]Event, error) {
-	query := `SELECT ` + eventColumns + ` FROM events WHERE kind = ?`
-	if !includeHidden {
-		query += ` AND visible = 1`
-	}
-	query += ` ORDER BY target_at ASC, sort_order ASC, id ASC`
-
-	rows, err := s.db.QueryContext(ctx, query, KindMilestone)
-	if err != nil {
-		return nil, fmt.Errorf("store: list milestones: %w", err)
-	}
-	defer rows.Close()
-
-	var out []Event
-	for rows.Next() {
-		e, err := scanEvent(rows)
-		if err != nil {
-			return nil, fmt.Errorf("store: scan milestone: %w", err)
-		}
-		out = append(out, e)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("store: iterate milestones: %w", err)
-	}
-	return out, nil
-}
-
-// NextFutureEvent returns the soonest visible event strictly after now, of any kind.
-// It backs the auto-advance behaviour: when the headline countdown reaches zero the
-// page can move on to whatever is next instead of sitting at zero forever.
-func (s *Store) NextFutureEvent(ctx context.Context, after time.Time) (*Event, error) {
-	row := s.db.QueryRowContext(ctx,
-		`SELECT `+eventColumns+` FROM events
-		 WHERE visible = 1 AND target_at > ?
-		 ORDER BY target_at ASC, id ASC LIMIT 1`, after.UTC().Unix())
-	e, err := scanEvent(row)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, fmt.Errorf("store: read next future event: %w", err)
-	}
-	return &e, nil
-}
-
-// CreateEvent inserts an event and fills in its ID.
 func (s *Store) CreateEvent(ctx context.Context, e *Event) error {
 	if err := e.validate(); err != nil {
 		return err
@@ -218,8 +168,8 @@ func (s *Store) SetMainEvent(ctx context.Context, e *Event) error {
 
 func (e *Event) validate() error {
 	var errs []error
-	if e.Kind != KindMain && e.Kind != KindMilestone {
-		errs = append(errs, fmt.Errorf("store: event kind %q must be main or milestone", e.Kind))
+	if e.Kind != KindMain {
+		errs = append(errs, fmt.Errorf("store: event kind %q must be %q", e.Kind, KindMain))
 	}
 	if strings.TrimSpace(e.Title) == "" {
 		errs = append(errs, errors.New("store: event title must not be empty"))

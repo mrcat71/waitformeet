@@ -217,70 +217,16 @@ func TestSetMainEventCreatesWhenAbsent(t *testing.T) {
 	}
 }
 
-func TestMilestonesOrderingAndVisibility(t *testing.T) {
-	ctx := context.Background()
-	s := newTestStore(t)
-
-	for _, e := range []Event{
-		{Kind: KindMilestone, Title: "later", TargetAt: fixedNow.Add(72 * time.Hour), Visible: true},
-		{Kind: KindMilestone, Title: "sooner", TargetAt: fixedNow.Add(24 * time.Hour), Visible: true},
-		{Kind: KindMilestone, Title: "hidden", TargetAt: fixedNow.Add(48 * time.Hour), Visible: false},
-	} {
-		if err := s.CreateEvent(ctx, &e); err != nil {
-			t.Fatalf("CreateEvent(%q) error = %v", e.Title, err)
-		}
-	}
-
-	visible, err := s.Milestones(ctx, false)
-	if err != nil {
-		t.Fatalf("Milestones(false) error = %v", err)
-	}
-	if got := titles(visible); len(got) != 2 || got[0] != "sooner" || got[1] != "later" {
-		t.Errorf("visible milestones = %v, want [sooner later]", got)
-	}
-
-	all, err := s.Milestones(ctx, true)
-	if err != nil {
-		t.Fatalf("Milestones(true) error = %v", err)
-	}
-	if len(all) != 3 {
-		t.Errorf("all milestones = %v, want 3 entries", titles(all))
-	}
-}
-
-func TestNextFutureEventSkipsPastAndHidden(t *testing.T) {
-	ctx := context.Background()
-	s := newTestStore(t)
-
-	for _, e := range []Event{
-		{Kind: KindMilestone, Title: "past", TargetAt: fixedNow.Add(-time.Hour), Visible: true},
-		{Kind: KindMilestone, Title: "hidden soon", TargetAt: fixedNow.Add(time.Hour), Visible: false},
-		{Kind: KindMilestone, Title: "next", TargetAt: fixedNow.Add(2 * time.Hour), Visible: true},
-	} {
-		if err := s.CreateEvent(ctx, &e); err != nil {
-			t.Fatalf("CreateEvent(%q) error = %v", e.Title, err)
-		}
-	}
-
-	got, err := s.NextFutureEvent(ctx, fixedNow)
-	if err != nil {
-		t.Fatalf("NextFutureEvent() error = %v", err)
-	}
-	if got.Title != "next" {
-		t.Errorf("NextFutureEvent() = %q, want %q", got.Title, "next")
-	}
-}
-
 func TestCreateEventValidation(t *testing.T) {
 	tests := []struct {
 		name    string
 		event   Event
 		wantMsg string
 	}{
-		{"empty title", Event{Kind: KindMilestone, TargetAt: fixedNow}, "title must not be empty"},
-		{"blank title", Event{Kind: KindMilestone, Title: "   ", TargetAt: fixedNow}, "title must not be empty"},
-		{"missing target", Event{Kind: KindMilestone, Title: "x"}, "target time must be set"},
-		{"bad kind", Event{Kind: "whatever", Title: "x", TargetAt: fixedNow}, "must be main or milestone"},
+		{"empty title", Event{Kind: KindMain, TargetAt: fixedNow}, "title must not be empty"},
+		{"blank title", Event{Kind: KindMain, Title: "   ", TargetAt: fixedNow}, "title must not be empty"},
+		{"missing target", Event{Kind: KindMain, Title: "x"}, "target time must be set"},
+		{"bad kind", Event{Kind: "whatever", Title: "x", TargetAt: fixedNow}, `must be "main"`},
 	}
 
 	for _, tt := range tests {

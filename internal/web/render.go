@@ -37,7 +37,13 @@ type page struct {
 	// is off.
 	ServerNow time.Time
 
-	Title       string
+	// Title names this page and fills <title>. Individual pages overwrite it, so it
+	// is not the name of the site.
+	Title string
+	// SiteTitle is the name of the site itself, for the header's home link. Kept
+	// separate from Title so a page like the login form is not mistaken for the
+	// site's own name.
+	SiteTitle   string
 	Description string
 	// Error and Notice carry one-off messages, already translated.
 	Error  string
@@ -225,6 +231,7 @@ func (s *Server) newPage(w http.ResponseWriter, r *http.Request, settings *store
 		CSRFToken:    token,
 		ServerNow:    time.Now().UTC(),
 		Title:        title,
+		SiteTitle:    title,
 		Description:  printer.T("meta.description"),
 		AssetVersion: s.assetVersion,
 		OIDCName:     s.oidc.DisplayName(),

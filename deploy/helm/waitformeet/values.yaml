@@ -214,11 +214,6 @@ content:
   #  at: "2026-12-24T10:00"
   #  timezone: Asia/Shanghai
 
-  milestones: []
-  #  - title: visa approved
-  #    emoji: "📄"
-  #    at: "2026-09-01"
-
   quotes: []
   #  - text: One day closer every day.
   #    locale: en
@@ -228,7 +223,6 @@ content:
   visibility:
     countdown: public
     clocks: public
-    milestones: public
     notes: logged-in
     gallery: logged-in
 
@@ -236,8 +230,6 @@ content:
     quotes: false
     # Needs egress from the pod to api.open-meteo.com.
     weather: false
-    # When the headline date passes, move on to the next one rather than sitting at zero.
-    autoAdvance: true
 
 metrics:
   serviceMonitor:

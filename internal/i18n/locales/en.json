@@ -37,19 +37,6 @@
   "clocks.day": "daytime",
   "clocks.night": "night",
 
-  "milestones.heading": "Along the way",
-  "milestones.upcoming": "Still to come",
-  "milestones.past": "Already behind us",
-  "milestones.none": "Nothing on the timeline yet.",
-  "milestones.in_days": {
-    "one": "in {count} day",
-    "other": "in {count} days"
-  },
-  "milestones.today": "today",
-  "milestones.days_ago": {
-    "one": "{count} day ago",
-    "other": "{count} days ago"
-  },
 
   "notes.heading": "Notes",
   "notes.none": "No notes yet. Leave the first one.",
@@ -124,14 +111,9 @@
   "admin.features.heading": "Extras",
   "admin.features.quotes": "Show a rotating daily line",
   "admin.features.weather": "Show the weather in both cities",
-  "admin.features.auto_advance": "Move on to the next date once one passes",
-  "admin.features.auto_advance_hint": "Keeps the counter pointing at something instead of sitting at zero.",
 
   "admin.events.main_heading": "The main countdown",
   "admin.events.main_hint": "Enter the time in the timezone you choose below.",
-  "admin.events.milestones_heading": "Along the way",
-  "admin.events.add": "Add a date",
-  "admin.events.none": "No dates yet.",
   "admin.field.title": "Title",
   "admin.field.emoji": "Emoji",
   "admin.field.at": "When",
@@ -176,7 +158,6 @@
   "admin.visibility.admin": "Only admins",
   "admin.section.countdown": "Countdown",
   "admin.section.clocks": "Clocks",
-  "admin.section.milestones": "Dates",
   "admin.section.notes": "Notes",
   "admin.section.gallery": "Photos",
   "admin.backup.heading": "Backup",

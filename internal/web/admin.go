@@ -137,7 +137,6 @@ func (s *Server) handleAdminContentSave(w http.ResponseWriter, r *http.Request) 
 	settings.PartnerB = partnerFromForm(r, "partner_b")
 	settings.QuotesEnabled = r.PostFormValue("quotes_enabled") != ""
 	settings.WeatherEnabled = r.PostFormValue("weather_enabled") != ""
-	settings.AutoAdvance = r.PostFormValue("auto_advance") != ""
 
 	if locale := r.PostFormValue("default_locale"); s.bundle.Supported(locale) {
 		settings.DefaultLocale = locale
@@ -173,9 +172,8 @@ func partnerFromForm(r *http.Request, prefix string) store.Partner {
 // eventsData backs the dates screen.
 type eventsData struct {
 	*adminPage
-	Main       *eventForm
-	Milestones []eventForm
-	Timezones  []string
+	Main      *eventForm
+	Timezones []string
 }
 
 // eventForm holds an event as the form shows it: a wall-clock time plus the zone it
@@ -241,15 +239,6 @@ func (s *Server) handleAdminEvents(w http.ResponseWriter, r *http.Request) {
 		data.Main = &form
 	}
 
-	milestones, err := s.store.Milestones(ctx, true)
-	if err != nil {
-		s.serverError(w, r, err)
-		return
-	}
-	for _, m := range milestones {
-		data.Milestones = append(data.Milestones, newEventForm(m, defaultTZ))
-	}
-
 	s.render(w, r, http.StatusOK, "admin_events", data)
 }
 
@@ -273,80 +262,6 @@ func (s *Server) handleAdminMainEvent(w http.ResponseWriter, r *http.Request) {
 		Visible:     r.PostFormValue("hidden") == "",
 	}
 	if err := s.store.SetMainEvent(r.Context(), event); err != nil {
-		s.adminError(w, r, tabEvents, err)
-		return
-	}
-	http.Redirect(w, r, "/admin/events?saved=1", http.StatusSeeOther)
-}
-
-func (s *Server) handleAdminMilestoneCreate(w http.ResponseWriter, r *http.Request) {
-	if !s.requireCSRF(w, r) {
-		return
-	}
-
-	target, err := parseFormInstant(r.PostFormValue("at"), r.PostFormValue("timezone"))
-	if err != nil {
-		s.adminError(w, r, tabEvents, err)
-		return
-	}
-
-	event := &store.Event{
-		Kind:        store.KindMilestone,
-		Title:       strings.TrimSpace(r.PostFormValue("title")),
-		Emoji:       strings.TrimSpace(r.PostFormValue("emoji")),
-		TargetAt:    target,
-		Description: strings.TrimSpace(r.PostFormValue("description")),
-		Visible:     r.PostFormValue("hidden") == "",
-	}
-	if err := s.store.CreateEvent(r.Context(), event); err != nil {
-		s.adminError(w, r, tabEvents, err)
-		return
-	}
-	http.Redirect(w, r, "/admin/events?saved=1", http.StatusSeeOther)
-}
-
-func (s *Server) handleAdminMilestoneUpdate(w http.ResponseWriter, r *http.Request) {
-	if !s.requireCSRF(w, r) {
-		return
-	}
-
-	id, err := pathID(r, "id")
-	if err != nil {
-		s.handleNotFound(w, r)
-		return
-	}
-	target, err := parseFormInstant(r.PostFormValue("at"), r.PostFormValue("timezone"))
-	if err != nil {
-		s.adminError(w, r, tabEvents, err)
-		return
-	}
-
-	event := &store.Event{
-		ID:          id,
-		Kind:        store.KindMilestone,
-		Title:       strings.TrimSpace(r.PostFormValue("title")),
-		Emoji:       strings.TrimSpace(r.PostFormValue("emoji")),
-		TargetAt:    target,
-		Description: strings.TrimSpace(r.PostFormValue("description")),
-		Visible:     r.PostFormValue("hidden") == "",
-	}
-	if err := s.store.UpdateEvent(r.Context(), event); err != nil {
-		s.adminError(w, r, tabEvents, err)
-		return
-	}
-	http.Redirect(w, r, "/admin/events?saved=1", http.StatusSeeOther)
-}
-
-func (s *Server) handleAdminMilestoneDelete(w http.ResponseWriter, r *http.Request) {
-	if !s.requireCSRF(w, r) {
-		return
-	}
-	id, err := pathID(r, "id")
-	if err != nil {
-		s.handleNotFound(w, r)
-		return
-	}
-	if err := s.store.DeleteEvent(r.Context(), id); err != nil && !errors.Is(err, store.ErrNotFound) {
 		s.adminError(w, r, tabEvents, err)
 		return
 	}

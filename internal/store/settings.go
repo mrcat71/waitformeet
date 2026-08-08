@@ -66,11 +66,10 @@ func (p Partner) Location() (*time.Location, error) {
 
 // SectionVisibility holds the per-section visibility switches that admins control.
 type SectionVisibility struct {
-	Countdown  Visibility
-	Clocks     Visibility
-	Milestones Visibility
-	Notes      Visibility
-	Gallery    Visibility
+	Countdown Visibility
+	Clocks    Visibility
+	Notes     Visibility
+	Gallery   Visibility
 }
 
 // Settings is the single row of site-wide configuration owned by the admin UI.
@@ -87,18 +86,15 @@ type Settings struct {
 	Visibility     SectionVisibility
 	QuotesEnabled  bool
 	WeatherEnabled bool
-	// AutoAdvance promotes the next future milestone to the main countdown once the
-	// current target passes, so the page keeps counting towards something.
-	AutoAdvance bool
-	UpdatedAt   time.Time
+	UpdatedAt      time.Time
 }
 
 const settingsColumns = `site_title, tagline,
 	partner_a_name, partner_a_city, partner_a_timezone,
 	partner_b_name, partner_b_city, partner_b_timezone,
 	accent_color, default_locale, background_media_id, separated_at,
-	vis_countdown, vis_clocks, vis_milestones, vis_notes, vis_gallery,
-	quotes_enabled, weather_enabled, auto_advance, updated_at`
+	vis_countdown, vis_clocks, vis_notes, vis_gallery,
+	quotes_enabled, weather_enabled, updated_at`
 
 // Settings reads the site configuration.
 func (s *Store) Settings(ctx context.Context) (*Settings, error) {
@@ -114,9 +110,9 @@ func (s *Store) Settings(ctx context.Context) (*Settings, error) {
 		&set.PartnerA.Name, &set.PartnerA.City, &set.PartnerA.Timezone,
 		&set.PartnerB.Name, &set.PartnerB.City, &set.PartnerB.Timezone,
 		&set.AccentColor, &set.DefaultLocale, &set.BackgroundMediaID, &separatedAt,
-		&set.Visibility.Countdown, &set.Visibility.Clocks, &set.Visibility.Milestones,
+		&set.Visibility.Countdown, &set.Visibility.Clocks,
 		&set.Visibility.Notes, &set.Visibility.Gallery,
-		&set.QuotesEnabled, &set.WeatherEnabled, &set.AutoAdvance, &updatedAt,
+		&set.QuotesEnabled, &set.WeatherEnabled, &updatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		// The initial migration inserts row 1, so its absence means the database was
@@ -144,16 +140,16 @@ func (s *Store) SaveSettings(ctx context.Context, set *Settings) error {
 		partner_a_name = ?, partner_a_city = ?, partner_a_timezone = ?,
 		partner_b_name = ?, partner_b_city = ?, partner_b_timezone = ?,
 		accent_color = ?, default_locale = ?, background_media_id = ?, separated_at = ?,
-		vis_countdown = ?, vis_clocks = ?, vis_milestones = ?, vis_notes = ?, vis_gallery = ?,
-		quotes_enabled = ?, weather_enabled = ?, auto_advance = ?, updated_at = ?
+		vis_countdown = ?, vis_clocks = ?, vis_notes = ?, vis_gallery = ?,
+		quotes_enabled = ?, weather_enabled = ?, updated_at = ?
 		WHERE id = 1`,
 		set.SiteTitle, set.Tagline,
 		set.PartnerA.Name, set.PartnerA.City, set.PartnerA.Timezone,
 		set.PartnerB.Name, set.PartnerB.City, set.PartnerB.Timezone,
 		set.AccentColor, set.DefaultLocale, set.BackgroundMediaID, unixPtr(set.SeparatedAt),
-		set.Visibility.Countdown, set.Visibility.Clocks, set.Visibility.Milestones,
+		set.Visibility.Countdown, set.Visibility.Clocks,
 		set.Visibility.Notes, set.Visibility.Gallery,
-		set.QuotesEnabled, set.WeatherEnabled, set.AutoAdvance, set.UpdatedAt.Unix(),
+		set.QuotesEnabled, set.WeatherEnabled, set.UpdatedAt.Unix(),
 	)
 	if err != nil {
 		return fmt.Errorf("store: save settings: %w", err)
@@ -165,11 +161,10 @@ func (set *Settings) validate() error {
 	var errs []error
 
 	for name, v := range map[string]Visibility{
-		"countdown":  set.Visibility.Countdown,
-		"clocks":     set.Visibility.Clocks,
-		"milestones": set.Visibility.Milestones,
-		"notes":      set.Visibility.Notes,
-		"gallery":    set.Visibility.Gallery,
+		"countdown": set.Visibility.Countdown,
+		"clocks":    set.Visibility.Clocks,
+		"notes":     set.Visibility.Notes,
+		"gallery":   set.Visibility.Gallery,
 	} {
 		if !v.Valid() {
 			errs = append(errs, fmt.Errorf("store: %s visibility %q is not one of public, logged-in, admin", name, v))

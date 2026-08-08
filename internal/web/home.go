@@ -21,16 +21,24 @@ const (
 	dayEndHour   = 20
 )
 
+// homePhotos is how many pictures the front page strip shows before sending the
+// visitor on to the gallery.
+const homePhotos = 6
+
 // homeData is what the front page template renders.
 type homeData struct {
 	*page
 
-	Countdown      *countdownView
-	Progress       *progressView
-	Clocks         []clockView
-	Milestones     []milestoneView
-	ShowMilestones bool
-	Quote          string
+	Countdown *countdownView
+	Progress  *progressView
+	Clocks    []clockView
+	Quote     string
+	// Note is the note of the day, shown only to whoever may see the notes section.
+	Note *noteView
+	// Photos are the most recent pictures, shown only to whoever may see the
+	// gallery. MorePhotos says there are further ones behind the gallery link.
+	Photos     []store.Media
+	MorePhotos bool
 }
 
 type countdownView struct {
@@ -73,13 +81,6 @@ type clockView struct {
 	WeatherIcon string
 }
 
-type milestoneView struct {
-	store.Event
-	Passed        bool
-	DateLabel     string
-	RelativeLabel string
-}
-
 func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -101,7 +102,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	data := &homeData{page: base}
 	now := time.Now().UTC()
 
-	event, err := s.headlineEvent(ctx, settings, now)
+	event, err := s.headlineEvent(ctx)
 	if err != nil {
 		s.serverError(w, r, err)
 		return
@@ -122,14 +123,32 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if auth.CanSee(ctx, settings.Visibility.Milestones) {
-		data.ShowMilestones = true
-		milestones, err := s.store.Milestones(ctx, false)
+	// The notes and the gallery keep their own visibility levels, so each is
+	// gated exactly as its own page is: a private wall stays private even when
+	// the countdown around it is public.
+	if base.ShowNotes {
+		notes, err := s.store.Notes(ctx, false)
 		if err != nil {
 			s.serverError(w, r, err)
 			return
 		}
-		data.Milestones = buildMilestones(base, milestones, now)
+		if pick := noteOfTheDay(notes, now); pick != nil {
+			view := s.noteView(base, *pick)
+			data.Note = &view
+		}
+	}
+
+	if base.ShowGallery {
+		pictures, err := s.store.MediaList(ctx)
+		if err != nil {
+			s.serverError(w, r, err)
+			return
+		}
+		if len(pictures) > homePhotos {
+			data.Photos, data.MorePhotos = pictures[:homePhotos], true
+		} else {
+			data.Photos = pictures
+		}
 	}
 
 	if settings.QuotesEnabled {
@@ -144,34 +163,17 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	s.render(w, r, http.StatusOK, "home", data)
 }
 
-// headlineEvent returns the event the front page counts towards.
-//
-// With auto-advance on, a main event whose date has passed hands over to the next
-// future milestone, so the page keeps counting towards something instead of sitting
-// at zero forever.
-func (s *Server) headlineEvent(ctx context.Context, settings *store.Settings, now time.Time) (*store.Event, error) {
+// headlineEvent returns the event the front page counts towards: the one main
+// countdown, or nothing at all when none is set.
+func (s *Server) headlineEvent(ctx context.Context) (*store.Event, error) {
 	main, err := s.store.MainEvent(ctx)
 	if errors.Is(err, store.ErrNotFound) {
-		main = nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	if main != nil && !main.Passed(now) {
-		return main, nil
-	}
-	if !settings.AutoAdvance {
-		return main, nil
-	}
-
-	next, err := s.store.NextFutureEvent(ctx, now)
-	if errors.Is(err, store.ErrNotFound) {
-		return main, nil
+		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return next, nil
+	return main, nil
 }
 
 func buildCountdown(p *page, event *store.Event, now time.Time) *countdownView {
@@ -263,31 +265,6 @@ func (s *Server) buildClocks(settings *store.Settings, now time.Time) []clockVie
 			Time:     local.Format("15:04"),
 			Date:     local.Format("Mon 2 Jan"),
 			IsDay:    local.Hour() >= dayStartHour && local.Hour() < dayEndHour,
-		})
-	}
-	return out
-}
-
-func buildMilestones(p *page, events []store.Event, now time.Time) []milestoneView {
-	out := make([]milestoneView, 0, len(events))
-	for _, e := range events {
-		days := int(e.TargetAt.Sub(now).Hours() / dayHours)
-
-		var relative string
-		switch {
-		case e.Passed(now):
-			relative = p.N("milestones.days_ago", -days)
-		case days == 0:
-			relative = p.T("milestones.today")
-		default:
-			relative = p.N("milestones.in_days", days)
-		}
-
-		out = append(out, milestoneView{
-			Event:         e,
-			Passed:        e.Passed(now),
-			DateLabel:     formatDate(p.Locale, e.TargetAt),
-			RelativeLabel: relative,
 		})
 	}
 	return out
