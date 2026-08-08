@@ -217,9 +217,13 @@ func TestResolve(t *testing.T) {
 		want       string
 	}{
 		{name: "query wins", query: "ru", cookie: "es", accept: "en", configured: "zh-Hans", want: "ru"},
-		{name: "cookie beats the header", cookie: "es", accept: "en", configured: "ru", want: "es"},
-		{name: "header beats the configured default", accept: "ru", configured: "es", want: "ru"},
-		{name: "configured default is the last resort", configured: "zh-Hans", want: "zh-Hans"},
+		{name: "cookie beats the configured default", cookie: "es", accept: "en", configured: "ru", want: "es"},
+		// The site is written in the language its owners chose, so a visiting
+		// browser asking for something else does not get to override it.
+		{name: "configured default beats the header", accept: "ru", configured: "es", want: "es"},
+		{name: "the header is used when nothing is configured", accept: "ru", want: "ru"},
+		{name: "an unknown configured default falls back to the header", accept: "ru", configured: "kl", want: "ru"},
+		{name: "configured default alone is honoured", configured: "zh-Hans", want: "zh-Hans"},
 		{name: "nothing at all means english", want: "en"},
 		{name: "unknown query is ignored", query: "kl", configured: "ru", want: "ru"},
 		{name: "unknown cookie is ignored", cookie: "kl", configured: "ru", want: "ru"},
@@ -227,8 +231,9 @@ func TestResolve(t *testing.T) {
 		{name: "quality values are respected", accept: "de;q=0.9, ru;q=0.8", want: "ru"},
 		{name: "higher quality wins", accept: "es;q=0.5, ru;q=0.9", want: "ru"},
 		{name: "zero quality is refused", accept: "ru;q=0, es;q=0.5", want: "es"},
-		{name: "wildcard is skipped", accept: "*", configured: "es", want: "es"},
-		{name: "malformed header does not panic", accept: "!!!;q=abc", configured: "es", want: "es"},
+		// No configured default in these two, so the header is what is under test.
+		{name: "wildcard is skipped", accept: "*", want: "en"},
+		{name: "malformed header does not panic", accept: "!!!;q=abc", want: "en"},
 	}
 
 	for _, tt := range tests {

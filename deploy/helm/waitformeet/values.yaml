@@ -193,6 +193,9 @@ content:
   siteTitle: ""
   tagline: ""
   timezone: UTC
+  # The language the site is written in. It wins over the visitor's browser: a
+  # phone set to another language still shows the site as you wrote it. Anyone can
+  # switch with the picker in the footer, and that choice is remembered for them.
   defaultLocale: en
   accentColor: "#e5687f"
   # The day you were last together. Anchors the progress bar and the days-apart count.

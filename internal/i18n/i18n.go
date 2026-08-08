@@ -179,9 +179,15 @@ func (b *Bundle) Match(tag string) string {
 
 // Resolve picks the locale for a request.
 //
-// The order is: an explicit ?lang, then the remembered cookie, then the browser's
-// Accept-Language, and finally the deployment's configured default. Anything
+// The order is: an explicit ?lang, then the remembered cookie, then the deployment's
+// configured default, and only then the browser's Accept-Language. Anything
 // unrecognised is skipped rather than treated as an error.
+//
+// The configured default deliberately outranks the browser. This is a site made by
+// two people who chose the language it is written in; a visitor whose phone happens
+// to ask for Spanish should still see the site as they wrote it. A visitor who
+// disagrees still wins, because their own choice - the switch in the footer, which
+// sets ?lang and then the cookie - is checked first and remembered.
 func (b *Bundle) Resolve(r *http.Request, configured string) string {
 	if tag := b.Match(r.URL.Query().Get(LocaleQuery)); tag != "" {
 		return tag
@@ -191,10 +197,12 @@ func (b *Bundle) Resolve(r *http.Request, configured string) string {
 			return tag
 		}
 	}
-	if tag := b.matchAcceptLanguage(r.Header.Get("Accept-Language")); tag != "" {
+	if tag := b.Match(configured); tag != "" {
 		return tag
 	}
-	if tag := b.Match(configured); tag != "" {
+	// No configured default (or one naming a language this build does not carry):
+	// the browser's preference is a better guess than falling straight to English.
+	if tag := b.matchAcceptLanguage(r.Header.Get("Accept-Language")); tag != "" {
 		return tag
 	}
 	return DefaultLocale

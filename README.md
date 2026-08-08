@@ -27,7 +27,8 @@ a different date needs only a different `values.yaml`.
 - **Installable**: a web app manifest and a service worker, so it can live on a home
   screen and still show the countdown on a bad connection.
 - **Four languages**: English, Russian, Simplified Chinese and Spanish, with proper
-  plural rules in each.
+  plural rules in each. The site is shown in the language you configured rather than
+  whatever the visitor's browser asks for, and anyone can switch it for themselves.
 - Optional: a rotating daily line, and the weather in both cities.
 
 ## Access
@@ -311,6 +312,15 @@ web/src              TypeScript sources
 tools/assets         the esbuild driver
 deploy/helm          the chart
 ```
+
+### Which language a visitor sees
+
+In order: an explicit choice through the picker in the footer (remembered in a
+cookie), then `content.defaultLocale`, and only then the browser's
+`Accept-Language`. The configured default deliberately outranks the browser,
+because the site is written in a language its owners chose and a visiting phone
+asking for something else should not override it. Leave `defaultLocale` unset and
+the browser decides, as it used to.
 
 ### Adding a language
 
