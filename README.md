@@ -270,6 +270,12 @@ or snapshot the volume with whatever your cluster already has (Velero, a
 
 ## Development
 
+Renovate keeps dependency updates compact: non-major Go modules and GitHub
+Actions are grouped by ecosystem, while the Go toolchain is kept in its own
+atomic update. Other major updates require approval from the Dependency
+Dashboard before Renovate opens a pull request. At most three Renovate pull
+requests are open concurrently. The policy lives in `.github/renovate.json`.
+
 ```sh
 make          # assets, format, vet, lint, test, type-check, helm lint
 make test

@@ -1,3 +1,50 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:recommended"
+  ],
+  "timezone": "Europe/Madrid",
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 3,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the Go version stored in the GitHub Actions environment.",
+      "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": ["GO_VERSION:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)[\\\"']?"],
+      "datasourceTemplate": "golang-version",
+      "depNameTemplate": "go",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Require dashboard approval for major updates by default.",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Group non-major Go dependency updates.",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Go dependencies",
+      "groupSlug": "go-dependencies"
+    },
+    {
+      "description": "Group GitHub Actions without mixing in runtime versions.",
+      "matchManagers": ["github-actions"],
+      "matchDatasources": ["github-tags"],
+      "groupName": "GitHub Actions",
+      "groupSlug": "github-actions",
+      "dependencyDashboardApproval": false
+    },
+    {
+      "description": "Keep Go toolchain references in one update.",
+      "matchPackageNames": ["go", "golang"],
+      "groupName": "Go toolchain",
+      "groupSlug": "go-toolchain",
+      "rangeStrategy": "bump"
+    }
+  ]
 }
