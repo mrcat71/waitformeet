@@ -78,7 +78,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Type-check the page script
         run: npx --yes --package=typescript@${{ env.TYPESCRIPT_VERSION }} tsc --noEmit -p tsconfig.json
