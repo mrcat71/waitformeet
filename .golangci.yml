@@ -27,6 +27,12 @@ linters:
       excludes:
         # G104 duplicates errcheck.
         - G104
+        # G124 wants Secure to be a literal true. Every cookie here sets HttpOnly
+        # and SameSite outright and takes Secure from config, which defaults to
+        # true and only goes false so local development can run over HTTP. The
+        # rule cannot see through the config field, so it fires on all six
+        # correct call sites and reports nothing.
+        - G124
     revive:
       rules:
         - name: exported
@@ -34,6 +40,11 @@ linters:
             - disableStutteringCheck
 
   exclusions:
+    # A deferred Close on a read path has nothing to report and nothing to do.
+    # Write paths still check it explicitly, because a failed flush there loses
+    # data.
+    presets:
+      - std-error-handling
     rules:
       # Tests may skip error checks on setup helpers and use weak randomness.
       - path: _test\.go
@@ -41,6 +52,11 @@ linters:
           - errcheck
           - gosec
           - unparam
+      # httptest.NewRequest carries no context by design, and a test's own
+      # requests need no cancellation.
+      - path: _test\.go
+        linters:
+          - noctx
 
 formatters:
   enable:

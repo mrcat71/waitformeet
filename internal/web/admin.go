@@ -319,7 +319,7 @@ func (s *Server) handleAdminQuoteDelete(w http.ResponseWriter, r *http.Request) 
 	if !s.requireCSRF(w, r) {
 		return
 	}
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return
@@ -402,8 +402,9 @@ func parseFormInstant(value, timezone string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("web: cannot read %q as a date and time", value)
 }
 
-func pathID(r *http.Request, name string) (int64, error) {
-	return strconv.ParseInt(r.PathValue(name), 10, 64)
+// pathID reads the {id} wildcard out of the matched route pattern.
+func pathID(r *http.Request) (int64, error) {
+	return strconv.ParseInt(r.PathValue("id"), 10, 64)
 }
 
 // commonTimezones populates the timezone pickers. It is a short curated list rather

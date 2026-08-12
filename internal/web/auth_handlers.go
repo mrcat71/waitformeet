@@ -29,6 +29,8 @@ type inviteData struct {
 
 func (s *Server) handleLoginForm(w http.ResponseWriter, r *http.Request) {
 	if auth.IsSignedIn(r.Context()) {
+		// #nosec G710 -- safeReturnTo rejects absolute, scheme-relative and
+		// host-bearing targets, so this can only ever be a local path.
 		http.Redirect(w, r, safeReturnTo(r.URL.Query().Get("return_to")), http.StatusSeeOther)
 		return
 	}

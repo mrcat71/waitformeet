@@ -87,7 +87,10 @@ func (s *Store) UserByOIDCSubject(ctx context.Context, subject string) (*User, e
 	return s.userWhere(ctx, `oidc_subject = ?`, subject)
 }
 
+// userWhere is unexported and every caller passes a literal predicate, so the
+// only thing reaching the database from outside is args.
 func (s *Store) userWhere(ctx context.Context, where string, args ...any) (*User, error) {
+	// #nosec G202 -- userColumns is a constant and where is a caller literal.
 	row := s.db.QueryRowContext(ctx, `SELECT `+userColumns+` FROM users WHERE `+where, args...)
 	u, err := scanUser(row)
 	if errors.Is(err, sql.ErrNoRows) {

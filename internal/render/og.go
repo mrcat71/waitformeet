@@ -246,10 +246,12 @@ func parseHexColour(s string, fallback color.RGBA) color.RGBA {
 	if err != nil {
 		return fallback
 	}
+	// The masks are what make the narrowing to uint8 total, rather than relying
+	// on the caller having checked the length above.
 	return color.RGBA{
-		R: uint8(value >> 16),
-		G: uint8(value >> 8),
-		B: uint8(value),
+		R: uint8((value >> 16) & 0xff),
+		G: uint8((value >> 8) & 0xff),
+		B: uint8(value & 0xff),
 		A: 0xff,
 	}
 }

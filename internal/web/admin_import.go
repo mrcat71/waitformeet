@@ -110,7 +110,7 @@ func (s *Server) unpackBackup(file io.Reader, staging string) (dbPath, mediaDir 
 	extracted := filepath.Join(staging, "extracted")
 	mediaDir = filepath.Join(extracted, "media")
 
-	var total int64
+	var total uint64
 	for _, entry := range reader.File {
 		// Reject anything trying to escape the staging directory. A crafted
 		// archive with ../../ entries would otherwise write anywhere the process
@@ -124,11 +124,14 @@ func (s *Server) unpackBackup(file io.Reader, staging string) (dbPath, mediaDir 
 		}
 
 		// A zip bomb declares a small archive that expands enormously, so the
-		// running total is what has to be bounded, not the file on disk.
-		total += int64(entry.UncompressedSize64)
-		if total > maxBackupBytes {
+		// running total is what has to be bounded, not the file on disk. The sum
+		// stays in uint64 and is tested before it grows: narrowing a declared size
+		// to int64 first would let a crafted header wrap the total negative and
+		// walk straight past this limit.
+		if entry.UncompressedSize64 > maxBackupBytes-total {
 			return "", "", errors.New("web: the archive expands to more than this site accepts")
 		}
+		total += entry.UncompressedSize64
 
 		target := filepath.Join(extracted, filepath.FromSlash(clean))
 		if err := os.MkdirAll(filepath.Dir(target), 0o750); err != nil {
@@ -193,9 +196,12 @@ func (s *Server) restoreFrom(ctx context.Context, dbPath, mediaDir string) error
 	}
 
 	for _, table := range restoredTables {
+		// #nosec G202 -- restoredTables is a fixed list of identifiers declared in
+		// this file. Table names cannot be bound as parameters.
 		if _, err := tx.ExecContext(ctx, `DELETE FROM main.`+table); err != nil {
 			return fmt.Errorf("web: clear %s: %w", table, err)
 		}
+		// #nosec G202 -- same fixed list of identifiers.
 		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO main.`+table+` SELECT * FROM restore.`+table); err != nil {
 			return fmt.Errorf("web: restore %s: %w", table, err)
@@ -283,6 +289,8 @@ func ensureMediaDirs(root string) error {
 }
 
 func writeFile(path string, src io.Reader) error {
+	// #nosec G304 -- callers pass either a staging path they built themselves or
+	// an archive entry already rejected above unless it stays inside staging.
 	dst, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("web: create %s: %w", path, err)

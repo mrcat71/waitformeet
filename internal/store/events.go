@@ -78,6 +78,8 @@ func (s *Store) Event(ctx context.Context, id int64) (*Event, error) {
 	return &e, nil
 }
 
+// CreateEvent validates an event and inserts it, filling in its ID and creation
+// time on the way through.
 func (s *Store) CreateEvent(ctx context.Context, e *Event) error {
 	if err := e.validate(); err != nil {
 		return err

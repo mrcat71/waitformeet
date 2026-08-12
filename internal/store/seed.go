@@ -79,6 +79,8 @@ type SeedFeatures struct {
 // LoadSeedFile reads and parses a seed document. A missing file is not an error:
 // deployments that configure everything through the UI have no seed at all.
 func LoadSeedFile(path string) (*Seed, error) {
+	// #nosec G304 -- the seed path comes from the operator's own configuration,
+	// never from a request.
 	body, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil

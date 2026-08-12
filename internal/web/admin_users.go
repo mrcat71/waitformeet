@@ -124,7 +124,7 @@ func (s *Server) handleAdminUserUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return
@@ -159,7 +159,7 @@ func (s *Server) handleAdminUserDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return
@@ -176,7 +176,7 @@ func (s *Server) handleAdminInviteDelete(w http.ResponseWriter, r *http.Request)
 	if !s.requireCSRF(w, r) {
 		return
 	}
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return
@@ -308,7 +308,13 @@ func (s *Server) handleAdminExport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
 	zw := zip.NewWriter(w)
-	defer zw.Close()
+	defer func() {
+		// Close writes the central directory, so its error is the difference
+		// between a working archive and one no unzipper will open.
+		if err := zw.Close(); err != nil {
+			s.log.ErrorContext(ctx, "finishing the export archive", "error", err)
+		}
+	}()
 
 	if err := addFileToZip(zw, snapshot, store.DBFileName); err != nil {
 		// The response is already streaming, so the only honest thing left is to
@@ -327,6 +333,8 @@ func (s *Server) handleAdminExport(w http.ResponseWriter, r *http.Request) {
 }
 
 func addFileToZip(zw *zip.Writer, path, name string) error {
+	// #nosec G304 -- path is the snapshot this handler just wrote or a file found
+	// by walking the site's own media directory.
 	src, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("web: open %s: %w", path, err)

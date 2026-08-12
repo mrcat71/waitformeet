@@ -243,14 +243,6 @@ func TestCreateEventValidation(t *testing.T) {
 	}
 }
 
-func titles(events []Event) []string {
-	out := make([]string, len(events))
-	for i, e := range events {
-		out[i] = e.Title
-	}
-	return out
-}
-
 func contains(haystack, needle string) bool {
 	return strings.Contains(haystack, needle)
 }

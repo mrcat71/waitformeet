@@ -11,6 +11,9 @@ permissions:
 
 env:
   GO_VERSION: "1.26"
+  # Pinned, not "latest": a new golangci-lint release enables new checks, which
+  # would fail CI on an unchanged commit.
+  GOLANGCI_VERSION: "v2.12.2"
   # esbuild strips TypeScript types without checking them, so a real compiler runs
   # separately. This is the only place Node appears anywhere in the project.
   TYPESCRIPT_VERSION: "6.0.3"
@@ -39,8 +42,10 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      # No -race: the cluster runner image ships no C compiler, so cgo is off and
+      # the race detector cannot build. `make test` still runs it locally.
       - name: Test
-        run: go test -race -count=1 ./...
+        run: go test -count=1 ./...
 
       - name: Build
         run: go build ./...
@@ -58,7 +63,7 @@ jobs:
 
       - uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          version: ${{ env.GOLANGCI_VERSION }}
 
   assets:
     name: Frontend

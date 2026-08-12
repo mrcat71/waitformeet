@@ -171,7 +171,7 @@ func (s *Server) handleNoteDelete(w http.ResponseWriter, r *http.Request) {
 	if !s.requireCSRF(w, r) {
 		return
 	}
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return
@@ -280,7 +280,7 @@ func (s *Server) handleGalleryDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	id, err := pathID(r, "id")
+	id, err := pathID(r)
 	if err != nil {
 		s.handleNotFound(w, r)
 		return

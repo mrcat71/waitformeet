@@ -103,6 +103,8 @@ func templateFuncs() template.FuncMap {
 			if !isHexColour(colour) {
 				return template.CSS("#e5687f")
 			}
+			// #nosec G203 -- isHexColour above is what makes this safe to mark
+			// as CSS; anything else has already returned the fallback.
 			return template.CSS(colour)
 		},
 		// dateInput renders an optional instant for an <input type="date">.

@@ -92,7 +92,7 @@ func (s *Store) Save(r io.Reader) (*Stored, error) {
 	// that can get through.
 	src, _, err := image.Decode(r)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrNotAnImage, err)
+		return nil, fmt.Errorf("%w: %w", ErrNotAnImage, err)
 	}
 
 	bounds := src.Bounds()
@@ -165,7 +165,9 @@ func resizeToFit(src image.Image, maxEdge int) image.Image {
 func writeJPEG(path string, img image.Image, quality int) error {
 	tmp := path + ".tmp"
 
-	file, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o640)
+	// #nosec G304 -- the only callers join a media directory with randomName's
+	// crypto/rand hex, so no part of this path comes from an upload.
+	file, err := os.OpenFile(tmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("media: create %s: %w", tmp, err)
 	}

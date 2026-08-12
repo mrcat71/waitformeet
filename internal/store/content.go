@@ -256,6 +256,8 @@ func (s *Store) Quotes(ctx context.Context, locale string, enabledOnly bool) ([]
 		args = append(args, locale)
 	}
 	if len(conds) > 0 {
+		// #nosec G202 -- every element of conds is a literal defined just above;
+		// the locale itself travels as a bound parameter in args.
 		query += ` WHERE ` + strings.Join(conds, ` AND `)
 	}
 	query += ` ORDER BY id ASC`
