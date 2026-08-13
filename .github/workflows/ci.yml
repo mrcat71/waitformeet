@@ -11,6 +11,9 @@ permissions:
 
 env:
   GO_VERSION: "1.26"
+  # setup-go's manifest can lag a newly released Go patch. Let Go select the
+  # exact toolchain required by go.mod instead of failing while it catches up.
+  GOTOOLCHAIN: "auto"
   # Pinned, not "latest": a new golangci-lint release enables new checks, which
   # would fail CI on an unchanged commit.
   GOLANGCI_VERSION: "v2.12.2"
@@ -29,6 +32,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+
+      # setup-go leaves GOTOOLCHAIN=local in the job environment on this runner.
+      # Write after setup-go so every later step uses the module's toolchain.
+      - name: Enable automatic Go toolchain selection
+        run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
 
       - name: Check formatting
         run: |
@@ -61,6 +69,11 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      # setup-go leaves GOTOOLCHAIN=local in the job environment on this runner.
+      # Write after setup-go so every later step uses the module's toolchain.
+      - name: Enable automatic Go toolchain selection
+        run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
+
       - uses: golangci/golangci-lint-action@v9
         with:
           version: ${{ env.GOLANGCI_VERSION }}
@@ -75,6 +88,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+
+      # setup-go leaves GOTOOLCHAIN=local in the job environment on this runner.
+      # Write after setup-go so every later step uses the module's toolchain.
+      - name: Enable automatic Go toolchain selection
+        run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v7
         with:

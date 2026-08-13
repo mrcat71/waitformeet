@@ -19,6 +19,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   # Keep in step with GO_VERSION in ci.yml.
   GO_VERSION: "1.26"
+  # setup-go's manifest can lag a newly released Go patch. Let Go select the
+  # exact toolchain required by go.mod instead of failing while it catches up.
+  GOTOOLCHAIN: "auto"
   # A tag push carries the tag in ref_name; a dispatch names it outright.
   TAG: ${{ inputs.tag || github.ref_name }}
 
@@ -131,6 +134,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+
+      # setup-go leaves GOTOOLCHAIN=local in the job environment on this runner.
+      # Write after setup-go so every later step uses the module's toolchain.
+      - name: Enable automatic Go toolchain selection
+        run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
 
       - name: Work out the version
         id: version
