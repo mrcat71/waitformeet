@@ -57,8 +57,7 @@ jobs:
     name: golangci-lint
     runs-on: waitformeet
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-go@v7
         with:
@@ -118,4 +117,68 @@ jobs:
       - name: Render with the defaults
         run: helm template wfm deploy/helm/waitformeet
 
-      # ...
+      - name: Render with ingress, OIDC, monitoring and a network policy
+        run: |
+          helm template wfm deploy/helm/waitformeet \
+            --set ingress.enabled=true \
+            --set ingress.className=nginx \
+            --set 'ingress.tls[0].secretName=wfm-tls' \
+            --set 'ingress.tls[0].hosts[0]=wait.example.com' \
+            --set auth.oidc.enabled=true \
+            --set auth.oidc.clientID=wfm \
+            --set auth.oidc.clientSecret=shh \
+            --set auth.bootstrap.email=me@example.com \
+            --set metrics.serviceMonitor.enabled=true \
+            --set networkPolicy.enabled=true
+
+      - name: Render with an existing claim and an existing secret
+        run: |
+          helm template wfm deploy/helm/waitformeet \
+            --set persistence.existingClaim=my-volume \
+            --set existingSecret.name=my-secret
+
+      - name: Render with the content pinned by the seed
+        run: |
+          helm template wfm deploy/helm/waitformeet \
+            --set config.seedMode=always \
+            --set content.siteTitle="Until we meet" \
+            --set content.main.title=reunion \
+            --set content.main.at=2026-12-24T10:00 \
+            --set content.main.timezone=Asia/Shanghai
+
+      # The schema is what stops a second replica from corrupting the database, so
+      # its guards are worth testing rather than assuming.
+      - name: The schema must refuse a second replica
+        run: |
+          if helm template wfm deploy/helm/waitformeet --set replicaCount=2 >/dev/null 2>&1; then
+            echo "replicaCount=2 was accepted, but SQLite on a RWO volume cannot be scaled out"
+            exit 1
+          fi
+
+      - name: The schema must refuse unrestricted auto-provisioning
+        run: |
+          if helm template wfm deploy/helm/waitformeet \
+            --set auth.oidc.enabled=true \
+            --set auth.oidc.clientID=wfm \
+            --set auth.oidc.autoProvision=true >/dev/null 2>&1; then
+            echo "auto-provisioning with no group or domain restriction was accepted"
+            exit 1
+          fi
+
+  docker:
+    name: Image
+    runs-on: waitformeet
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Build only, no push. Pushing happens on a tag, in release.yml.
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          build-args: |
+            VERSION=ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
