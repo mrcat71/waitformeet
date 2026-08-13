@@ -17,6 +17,10 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Keep in step with GO_VERSION in ci.yml.
+  GO_VERSION: "1.26"
+  # A tag push carries the tag in ref_name; a dispatch names it outright.
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   image:
@@ -24,16 +28,14 @@ jobs:
     runs-on: waitformeet
     steps:
       - uses: actions/checkout@v7
+        with:
+          # A dispatch asks for one specific tag, so build that rather than
+          # whatever the default branch happens to point at today.
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Work out the version
         id: version
-        run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            version="${{ inputs.tag }}"
-          else
-            version="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "version=${version#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v4
 
@@ -73,18 +75,14 @@ jobs:
     needs: image
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - uses: azure/setup-helm@v5
 
       - name: Work out the version
         id: version
-        run: |
-          if [ -n "${{ inputs.tag }}" ]; then
-            version="${{ inputs.tag }}"
-          else
-            version="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "version=${version#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
       # The chart and the image ship together, so their versions are kept in step
       # rather than drifting apart into a matrix nobody can reason about.
@@ -104,3 +102,98 @@ jobs:
         run: |
           helm push "dist/waitformeet-${{ steps.version.outputs.version }}.tgz" \
             "oci://ghcr.io/${{ github.repository_owner }}/charts"
+
+      # Handed to the release job so the file attached to the release is the one
+      # that went to the registry, not a second packaging of it.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: helm-chart
+          path: dist/waitformeet-${{ steps.version.outputs.version }}.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    name: Publish the GitHub release
+    runs-on: waitformeet
+    needs: [image, chart]
+    permissions:
+      # The only job that writes back to the repository, and only to create the
+      # release. Everything else stays on the read-only default above.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+          # Generated notes diff against the previous tag, which needs history.
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Work out the version
+        id: version
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      # Nothing here needs cgo: SQLite is modernc's pure-Go port and the browser
+      # bundle is committed, so every target cross-compiles from this one runner.
+      - name: Build the binaries
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p dist stage
+          for target in linux/amd64 linux/arm64 darwin/arm64 darwin/amd64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            name="waitformeet_${VERSION}_${os}_${arch}"
+            mkdir -p "stage/${name}"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build \
+              -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
+              -o "stage/${name}/waitformeet" ./cmd/waitformeet
+            cp README.md LICENSE "stage/${name}/"
+            tar -czf "dist/${name}.tar.gz" -C stage "${name}"
+          done
+          ls -l dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: helm-chart
+          path: dist
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum ./*.tar.gz ./*.tgz > checksums.txt
+          cat checksums.txt
+
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: ${{ inputs.tag || github.ref_name }}
+          # A tag like v1.0.0-rc.1 is not something to hand people as the latest.
+          prerelease: ${{ contains(inputs.tag || github.ref_name, '-') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.tar.gz
+            dist/*.tgz
+            dist/checksums.txt
+          body: |
+            ### Container image
+
+            ```sh
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+            ```
+
+            ### Helm chart
+
+            ```sh
+            helm upgrade --install waitformeet \
+              oci://ghcr.io/${{ github.repository_owner }}/charts/waitformeet \
+              --version ${{ steps.version.outputs.version }}
+            ```
+
+            The binaries below run the site outside Kubernetes; each archive holds
+            the server, the README and the licence. `checksums.txt` carries a
+            SHA256 for every file here.

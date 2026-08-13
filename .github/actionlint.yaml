@@ -1,0 +1,5 @@
+# actionlint cannot know about runners that live in our own cluster, so the
+# label is declared here rather than reported as a typo on every job.
+self-hosted-runner:
+  labels:
+    - waitformeet

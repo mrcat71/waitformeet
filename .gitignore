@@ -2,6 +2,11 @@
 /bin/
 coverage.out
 
+# Release artefacts, built by .github/workflows/release.yml and reproducible
+# locally with the same loop
+/dist/
+/stage/
+
 # Local runtime data: the SQLite database and uploaded pictures
 /tmp-data/
 

@@ -71,6 +71,26 @@ go run ./cmd/waitformeet
 
 Without a bootstrap password, a single-use invitation link is printed to the log.
 
+### Running a released binary
+
+Every tag publishes binaries for Linux and macOS on amd64 and arm64, beside the
+image and the chart. Take one from the [releases
+page](https://github.com/mrcat71/waitformeet/releases), check it against the
+`checksums.txt` published with it, and run it with the variables from
+[Configuration](#runtime-settings-from-the-environment):
+
+```sh
+tar xzf waitformeet_0.1.4_linux_amd64.tar.gz
+cd waitformeet_0.1.4_linux_amd64
+WFM_DATA_DIR=./data WFM_BASE_URL=https://wait.example.com \
+WFM_SESSION_SECRET=a-long-enough-secret-for-real-use \
+WFM_BOOTSTRAP_ADMIN_EMAIL=you@example.com ./waitformeet
+```
+
+There is nothing to install alongside it. The binary carries the templates, the
+browser bundle and every translation, and SQLite is compiled in rather than
+linked, so there is no libsqlite3 to match.
+
 ## Deploying to Kubernetes
 
 The chart is in `deploy/helm/waitformeet`. A minimal `values.yaml`:
