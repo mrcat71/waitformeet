@@ -1,6 +1,6 @@
 module github.com/mrcat71/waitformeet
 
-go 1.27.0
+go 1.27.1
 
 require (
 	github.com/coreos/go-oidc/v3 v3.20.0
