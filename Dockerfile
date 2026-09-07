@@ -6,6 +6,11 @@ FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS build
 
 WORKDIR /src
 
+# The golang images pin GOTOOLCHAIN=local, so the build breaks whenever go.mod
+# names a patch release newer than the one baked into the image tag. Letting Go
+# fetch the toolchain it asks for decouples the build from that release lag.
+ENV GOTOOLCHAIN=auto
+
 # Dependencies first so the layer is reused whenever only sources change.
 COPY go.mod go.sum ./
 RUN go mod download
