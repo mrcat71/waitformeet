@@ -5,6 +5,16 @@
     "group:recommended"
   ],
   "timezone": "Europe/Madrid",
+  "prCreation": "status-success",
+  "assignees": ["mrcat71"],
+  "assignAutomerge": true,
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-required",
+  "internalChecksFilter": "strict",
+  "internalChecksAsSuccess": false,
+  "vulnerabilityAlerts": {
+    "prCreation": "status-success"
+  },
   "dependencyDashboard": true,
   "prConcurrentLimit": 3,
   "customManagers": [

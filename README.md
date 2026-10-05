@@ -296,6 +296,17 @@ atomic update. Other major updates require approval from the Dependency
 Dashboard before Renovate opens a pull request. At most three Renovate pull
 requests are open concurrently. The policy lives in `.github/renovate.json`.
 
+Renovate waits seven days from release for updates subject to release-age
+checks before creating a branch (`internalChecksFilter: strict`). CI runs on
+`renovate/**` before a PR exists. Once branch checks pass, Renovate opens the PR
+and assigns `mrcat71`, including PRs configured for automerge. There is no weekly
+creation window or second seven-day wait inside the PR. Internal release-age
+checks do not substitute for CI. Updates missing required release timestamps
+remain pending in the Dependency Dashboard. Vulnerability alerts skip the age
+delay but still wait for successful branch checks. PR merge-commit checks run
+again after creation. Existing major-update approval and grouping rules remain
+unchanged.
+
 ```sh
 make          # assets, format, vet, lint, test, type-check, helm lint
 make test
