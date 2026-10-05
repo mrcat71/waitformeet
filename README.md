@@ -299,8 +299,10 @@ requests are open concurrently. The policy lives in `.github/renovate.json`.
 Renovate waits seven days from release for updates subject to release-age
 checks before creating a branch (`internalChecksFilter: strict`). CI runs on
 `renovate/**` before a PR exists. Once branch checks pass, Renovate opens the PR
-and assigns `mrcat71`, including PRs configured for automerge. There is no weekly
-creation window or second seven-day wait inside the PR. Internal release-age
+and assigns `mrcat71` and requests their review, including automerge PRs
+(`assignAutomerge: true`). Review requests are added at PR creation, not
+retroactively to existing PRs. There is no weekly creation window or second
+seven-day wait inside the PR. Internal release-age
 checks do not substitute for CI. Updates missing required release timestamps
 remain pending in the Dependency Dashboard. Vulnerability alerts skip the age
 delay but still wait for successful branch checks. PR merge-commit checks run
